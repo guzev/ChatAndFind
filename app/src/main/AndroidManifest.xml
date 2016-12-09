@@ -8,6 +8,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -16,9 +17,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SingInActivity"
-            android:label="@string/title_activity_sing_in"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:name=".SignInActivity"
+            android:label="@string/title_activity_sing_in" />
     </application>
-
 </manifest>
