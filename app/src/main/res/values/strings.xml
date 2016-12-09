@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ChatAndFind</string>
+    <string name="title_activity_sing_in">SingInActivity</string>
 </resources>

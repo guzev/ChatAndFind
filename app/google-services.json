@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "112668541902",
+    "firebase_url": "https://chatandfind-9a562.firebaseio.com",
+    "project_id": "chatandfind-9a562",
+    "storage_bucket": "chatandfind-9a562.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:112668541902:android:1eb5befaa62c89b0",
+        "android_client_info": {
+          "package_name": "com.chatandfind.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "112668541902-lb3n8i76028oeefir305agk5859an5fv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.chatandfind.android",
+            "certificate_hash": "8A011FF60594F49BFEF38AE2AD96F85E36000846"
+          }
+        },
+        {
+          "client_id": "112668541902-gjmn4njhfqov2jbv4gn8bs4930hi1tb4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9TQi_5KfEKg0CiBOk6Y4c8IllOl4QJiM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "112668541902-gjmn4njhfqov2jbv4gn8bs4930hi1tb4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
