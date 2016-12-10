@@ -32,9 +32,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        usernameView = (TextView) findViewById(R.id.user_name);
-        e_mailView = (TextView) findViewById(R.id.e_mail);
-        photo = (ImageView) findViewById(R.id.photo);
 
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
