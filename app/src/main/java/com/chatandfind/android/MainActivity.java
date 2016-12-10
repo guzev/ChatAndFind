@@ -24,45 +24,33 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        private FirebaseAuth mFirebaseAuth;
-        private FirebaseUser mFirebaseUser;
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        private String username;
-        private String e_mail;
-        private String imageURL;
+        usernameView = (TextView) findViewById(R.id.user_name);
+        e_mailView = (TextView) findViewById(R.id.e_mail);
+        photo = (ImageView) findViewById(R.id.photo);
 
-        private TextView usernameView;
-        private TextView e_mailView;
-        private ImageView photo;
-
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_main);
-
-            usernameView = (TextView) findViewById(R.id.user_name);
-            e_mailView = (TextView) findViewById(R.id.e_mail);
-            photo = (ImageView) findViewById(R.id.photo);
-
-            mFirebaseAuth = mFirebaseAuth.getInstance();
+        mFirebaseAuth = mFirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        if (mFirebaseUser == null) {
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return;
+        } else {
             mFirebaseUser = mFirebaseAuth.getCurrentUser();
-            if (mFirebaseUser == null) {
-                startActivity(new Intent(this, SignInActivity.class));
-                finish();
-                return;
-            } else {
-                mFirebaseUser = mFirebaseAuth.getCurrentUser();
 
-                // Name, email address, and profile photo Url
-                username = mFirebaseUser.getDisplayName();
-                e_mail = mFirebaseUser.getEmail();
-                if (mFirebaseUser.getPhotoUrl() != null) {
-                    imageURL = mFirebaseUser.getPhotoUrl().toString();
-                }
+            // Name, email address, and profile photo Url
+            username = mFirebaseUser.getDisplayName();
+            e_mail = mFirebaseUser.getEmail();
+            if (mFirebaseUser.getPhotoUrl() != null) {
+                imageURL = mFirebaseUser.getPhotoUrl().toString();
             }
+        }
 
-            usernameView.setText(username);
-            e_mailView.setText(e_mail);
-            if (imageURL != null) Glide.with(this).load(imageURL).into(photo);
+        usernameView.setText(username);
+        e_mailView.setText(e_mail);
+        if (imageURL != null) Glide.with(this).load(imageURL).into(photo);
     }
 }
+
