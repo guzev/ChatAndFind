@@ -2,5 +2,6 @@
     <string name="app_name">ChatAndFind</string>
     <string name="title_activity_sing_in">SingInActivity</string>
     <string name="sign_out">Выйти</string>
-    <string name="add_friend">Добавить пользователя</string>
+    <string name="add_chat">Создать новый чат</string>
+    <string name="no_chats">Нет чатов</string>
 </resources>

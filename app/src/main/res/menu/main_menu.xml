@@ -6,7 +6,7 @@
         android:title="@string/sign_out"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/fresh_config_menu"
-        android:title="@string/add_friend"
+        android:id="@+id/add_chat"
+        android:title="@string/add_chat"
         app:showAsAction="never"/>
 </menu>

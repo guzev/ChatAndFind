@@ -9,9 +9,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="top|center"
-        android:text="aaa"
         android:textAlignment="center"
-        android:textSize="50dp" />
+        android:textSize="30dp" />
 
 
     <TextView
@@ -19,8 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="right"
-        android:text="bbb"
-        android:textSize="30dp" />
+        android:textSize="16dp" />
 
     <TextView
         android:id="@+id/lastTime"
@@ -28,7 +26,6 @@
         android:layout_height="wrap_content"
         android:gravity="right"
         android:padding="4dp"
-        android:text="13:15"
         android:textSize="10dp" />
 
 </LinearLayout>
