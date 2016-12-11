@@ -1,49 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    >
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/messageRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/linearLayout"
-        />
+    android:orientation="vertical">
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:id="@+id/activity_chat_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:id="@+id/linearLayout">
+        android:orientation="horizontal">
 
         <EditText
+            android:id="@+id/activity_chat_edit_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:id="@+id/messageEditText"
             android:layout_gravity="center_vertical"
-            android:layout_weight="28.74"/>
+            android:layout_weight="28.74" />
 
         <Button
+            android:id="@+id/activity_chat_send_button"
             android:layout_width="60dp"
             android:layout_height="50dp"
+            android:layout_gravity="bottom"
             android:background="@drawable/button"
-            android:enabled="false"
-            android:id="@+id/sendButton"
-            android:layout_gravity="bottom"/>
+            android:enabled="false" />
 
     </LinearLayout>
 
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/activity_chat_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/activity_chat_linear_layout" />
+
     <ProgressBar
+        android:id="@+id/activity_chat_progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/chatProgressBar"
-        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
-        />
+        android:layout_centerVertical="true" />
+
+    <TextView
+        android:id="@+id/activity_chat_status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
 </RelativeLayout>

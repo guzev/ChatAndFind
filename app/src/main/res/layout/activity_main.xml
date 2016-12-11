@@ -12,7 +12,7 @@
 
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/chatRecyclerView"
+        android:id="@+id/activity_main_recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="visible">
@@ -20,7 +20,7 @@
     </android.support.v7.widget.RecyclerView>
 
     <TextView
-        android:id="@+id/statusText"
+        android:id="@+id/activity_main_statusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="20dp"
@@ -30,7 +30,7 @@
         android:text="@string/no_chats"/>
 
     <ProgressBar
-        android:id="@+id/progressBar"
+        android:id="@+id/activity_main_progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"

@@ -16,8 +16,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".SignInActivity"
             android:label="@string/title_activity_sing_in" />
+
+        <activity android:name=".ChatActivity" />
     </application>
 </manifest>

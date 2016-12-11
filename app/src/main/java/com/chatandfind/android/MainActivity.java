@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.chatandfind.android.databaseObjects.Chat;
+import com.chatandfind.android.databaseObjects.Message;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        public String id;
         public TextView title;
         public TextView lastMessage;
         public TextView lastMessageTime;
@@ -52,7 +54,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             Log.d(TAG, "onClick " + getAdapterPosition());
-            mContext.startActivity(new Intent(mContext, ChatActivity.class));
+            Intent intent = new Intent(mContext, ChatActivity.class);
+            intent.putExtra(Config.CHAT_ID_TAG, id);
+            mContext.startActivity(intent);
         }
     }
 
@@ -74,9 +78,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        recyclerView = (RecyclerView) findViewById(R.id.chatRecyclerView);
-        statusText = (TextView) findViewById(R.id.statusText);
+        progressBar = (ProgressBar) findViewById(R.id.activity_main_progressBar);
+        recyclerView = (RecyclerView) findViewById(R.id.activity_main_recyclerView);
+        statusText = (TextView) findViewById(R.id.activity_main_statusText);
         mContext = this;
 
         mFirebaseAuth = mFirebaseAuth.getInstance();
@@ -100,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String date = sdfDate.format(new Date(model.getLastMessageTime()));
                 viewHolder.lastMessageTime.setText(date);
+                viewHolder.id = model.getId();
             }
         };
 
@@ -125,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        databaseReference.child("chats").addValueEventListener(chatsListener);
+        databaseReference.child("chat_list").addValueEventListener(chatsListener);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
@@ -141,13 +146,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.sign_out_menu:
+            case R.id.main_menu_sign_out:
                 mFirebaseAuth.signOut();
                 startActivity(new Intent(this, SignInActivity.class));
                 return true;
-            case R.id.add_chat:
+            case R.id.main_menu_add_chat:
                 Chat newChat = new Chat("new Chat!", "нет сообщений", new Date().getTime());
-                DatabaseReference newChatRef = databaseReference.child("chats").push();
+                DatabaseReference newChatRef = databaseReference.child("chat_list").push();
                 newChat.setId(newChatRef.getKey());
                 newChatRef.setValue(newChat);
                 Log.d(TAG, "add chat with key: " + newChat.getId());

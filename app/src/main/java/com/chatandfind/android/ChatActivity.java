@@ -6,8 +6,13 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -49,7 +54,10 @@ public class ChatActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     LinearLayoutManager layoutManager;
     ProgressBar progressBar;
+    TextView statusText;
     String chatId;
+    Button sendButton;
+    EditText editText;
 
     //Firebase variables
     private FirebaseAuth mFirebaseAuth;
@@ -62,17 +70,51 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        recyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
-        progressBar = (ProgressBar) findViewById(R.id.chatProgressBar);
-
         Intent intent = getIntent();
         chatId = (String) intent.getCharSequenceExtra(Config.CHAT_ID_TAG);
 
+        recyclerView = (RecyclerView) findViewById(R.id.activity_chat_recycler_view);
+        progressBar = (ProgressBar) findViewById(R.id.activity_chat_progress_bar);
+        statusText = (TextView) findViewById(R.id.activity_chat_status_text);
+        sendButton = (Button) findViewById(R.id.activity_chat_send_button);
+        editText = (EditText) findViewById(R.id.activity_chat_edit_text);
+
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        databaseReference = FirebaseDatabase.getInstance().getReference().child("chats").child(chatId);
 
-        databaseReference = FirebaseDatabase.getInstance().getReference();
-        recyclerAdapter = new FirebaseRecyclerAdapter<Message, MessageViewHolder>(Message.class, R.layout.item_message, ChatActivity.MessageViewHolder.class, databaseReference.child("chats").child(chatId)) {
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (charSequence.toString().trim().length() > 0) {
+                    sendButton.setEnabled(true);
+                } else {
+                    sendButton.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Message message = new Message(editText.getText().toString(), mFirebaseUser.getDisplayName(), null);
+                if (mFirebaseUser.getPhotoUrl() != null) {
+                    message.setPhotoUrl(mFirebaseUser.getPhotoUrl().toString());
+                }
+                databaseReference.push().setValue(message);
+            }
+        });
+
+        recyclerAdapter = new FirebaseRecyclerAdapter<Message, MessageViewHolder>(Message.class, R.layout.item_message, ChatActivity.MessageViewHolder.class, databaseReference) {
             @Override
             protected void populateViewHolder(MessageViewHolder viewHolder, Message model, int position) {
                 progressBar.setVisibility(View.INVISIBLE);
@@ -84,10 +126,10 @@ public class ChatActivity extends AppCompatActivity {
             }
         };
 
-        /*ValueEventListener chatsListener = new ValueEventListener() {
+        ValueEventListener messagesListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "chatsListener: onDataChange");
+                Log.d(TAG, "messagesListener: onDataChange");
                 if (!dataSnapshot.exists()) {
                     statusText.setVisibility(View.VISIBLE);
                     recyclerView.setVisibility(View.INVISIBLE);
@@ -101,12 +143,12 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, "chatsListener: onCancelled");
+                Log.e(TAG, "messagesListener: onCancelled");
             }
-        };*/
+        };
 
 
-        //databaseReference.child("chats").addValueEventListener(chatsListener);
+        databaseReference.addValueEventListener(messagesListener);
         layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
