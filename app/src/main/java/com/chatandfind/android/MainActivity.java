@@ -1,5 +1,6 @@
 package com.chatandfind.android;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -32,9 +33,9 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
-    private final String TAG = "MainActivity";
+    private static final String TAG = "MainActivity";
 
-    public static class ChatViewHolder extends RecyclerView.ViewHolder {
+    public static class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView title;
         public TextView lastMessage;
         public TextView lastMessageTime;
@@ -44,6 +45,14 @@ public class MainActivity extends AppCompatActivity {
             title = (TextView) itemView.findViewById(R.id.chatName);
             lastMessage = (TextView) itemView.findViewById(R.id.lastMessage);
             lastMessageTime = (TextView) itemView.findViewById(R.id.lastTime);
+            itemView.setOnClickListener(this);
+        }
+
+
+        @Override
+        public void onClick(View view) {
+            Log.d(TAG, "onClick " + getAdapterPosition());
+            mContext.startActivity(new Intent(mContext, ChatActivity.class));
         }
     }
 
@@ -58,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     LinearLayoutManager layoutManager;
     TextView statusText;
+    private static Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         recyclerView = (RecyclerView) findViewById(R.id.chatRecyclerView);
         statusText = (TextView) findViewById(R.id.statusText);
+        mContext = this;
 
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
@@ -80,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
         //initial database
         databaseReference = FirebaseDatabase.getInstance().getReference();
-        recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, databaseReference.child("chats")) {
+        recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, databaseReference.child("chat_list")) {
             @Override
             protected void populateViewHolder(ChatViewHolder viewHolder, Chat model, int position) {
                 progressBar.setVisibility(View.INVISIBLE);
@@ -136,7 +147,10 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.add_chat:
                 Chat newChat = new Chat("new Chat!", "нет сообщений", new Date().getTime());
-                databaseReference.child("chats").push().setValue(newChat);
+                DatabaseReference newChatRef = databaseReference.child("chats").push();
+                newChat.setId(newChatRef.getKey());
+                newChatRef.setValue(newChat);
+                Log.d(TAG, "add chat with key: " + newChat.getId());
             default:
                 return true;
         }

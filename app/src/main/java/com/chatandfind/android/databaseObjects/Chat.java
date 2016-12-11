@@ -5,6 +5,7 @@ package com.chatandfind.android.databaseObjects;
  */
 
 public class Chat {
+    private String id;
     private String title;
     private String lastMessage;
     private long lastMessageTime;
@@ -39,5 +40,13 @@ public class Chat {
 
     public void setLastMessageTime(long lastMessageTime) {
         this.lastMessageTime = lastMessageTime;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
