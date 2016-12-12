@@ -1,24 +1,23 @@
 package com.chatandfind.android;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.chatandfind.android.databaseObjects.Chat;
 import com.chatandfind.android.databaseObjects.Message;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,13 +28,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity{
     private static final String TAG = "ChatActivity";
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
@@ -58,11 +54,14 @@ public class ChatActivity extends AppCompatActivity {
     String chatId;
     Button sendButton;
     EditText editText;
+    String email;
 
     //Firebase variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private DatabaseReference databaseReference;
+    private DatabaseReference chatDatabaseReference;
+    private DatabaseReference settingsDatabaseReference;
     private FirebaseRecyclerAdapter<Message, ChatActivity.MessageViewHolder> recyclerAdapter;
 
     @Override
@@ -81,8 +80,10 @@ public class ChatActivity extends AppCompatActivity {
 
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child("chats").child(chatId);
-
+        email = mFirebaseUser.getEmail();
+        databaseReference = FirebaseDatabase.getInstance().getReference();
+        chatDatabaseReference = databaseReference.child("chats").child(chatId);
+        settingsDatabaseReference = databaseReference.child("chats_settings").child(chatId);
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -110,11 +111,11 @@ public class ChatActivity extends AppCompatActivity {
                 if (mFirebaseUser.getPhotoUrl() != null) {
                     message.setPhotoUrl(mFirebaseUser.getPhotoUrl().toString());
                 }
-                databaseReference.push().setValue(message);
+                chatDatabaseReference.push().setValue(message);
             }
         });
 
-        recyclerAdapter = new FirebaseRecyclerAdapter<Message, MessageViewHolder>(Message.class, R.layout.item_message, ChatActivity.MessageViewHolder.class, databaseReference) {
+        recyclerAdapter = new FirebaseRecyclerAdapter<Message, MessageViewHolder>(Message.class, R.layout.item_message, ChatActivity.MessageViewHolder.class, chatDatabaseReference) {
             @Override
             protected void populateViewHolder(MessageViewHolder viewHolder, Message model, int position) {
                 progressBar.setVisibility(View.INVISIBLE);
@@ -148,10 +149,36 @@ public class ChatActivity extends AppCompatActivity {
         };
 
 
-        databaseReference.addValueEventListener(messagesListener);
+        chatDatabaseReference.addValueEventListener(messagesListener);
         layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.chat_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.chat_add_user:
+                Intent intent = new Intent(this, AddUserActivity.class);
+                startActivityForResult(intent, 1);
+            default:
+                return true;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data != null) {
+            String new_email = data.getStringExtra(Config.NEW_USER_EMAIL);
+            settingsDatabaseReference.child("users").child(new_email).setValue(true);
+        }
     }
 }

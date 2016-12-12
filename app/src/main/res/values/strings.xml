@@ -4,4 +4,9 @@
     <string name="sign_out">Выйти</string>
     <string name="add_chat">Создать новый чат</string>
     <string name="no_chats">Нет чатов</string>
+    <string name="add_user_to_chat">Добавить собеседника</string>
+    <string name="title_activity_add_user">Add User to Chat</string>
+    <string name="write_email">Напишите e-mail пользователя, которого хотите добавить</string>
+    <string name="add_user_button">Добавить в чат</string>
+    <string name="this_user_isnot_exist">Такой пользователь не найден</string>
 </resources>

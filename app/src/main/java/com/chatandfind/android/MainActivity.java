@@ -35,6 +35,7 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static Context mContext;
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public String id;
@@ -64,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private DatabaseReference databaseReference;
+    private DatabaseReference userChatsList;
+    private DatabaseReference chatsSettingReference;
     private FirebaseRecyclerAdapter<Chat, MainActivity.ChatViewHolder> recyclerAdapter;
 
 
@@ -71,7 +74,8 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     LinearLayoutManager layoutManager;
     TextView statusText;
-    private static Context mContext;
+    String email;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,12 +94,15 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         } else {
-            mFirebaseUser = mFirebaseAuth.getCurrentUser();
+            email = mFirebaseUser.getEmail();
+            FirebaseDatabase.getInstance().getReference().child("users").child(email.substring(0, email.length() - 4)).setValue(true);
         }
 
         //initial database
         databaseReference = FirebaseDatabase.getInstance().getReference();
-        recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, databaseReference.child("chat_list")) {
+        userChatsList = databaseReference.child("chat_list").child(email.substring(0, email.length() - 4));
+        chatsSettingReference = databaseReference.child("chats_settings");
+        recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, userChatsList) {
             @Override
             protected void populateViewHolder(ChatViewHolder viewHolder, Chat model, int position) {
                 progressBar.setVisibility(View.INVISIBLE);
@@ -130,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        databaseReference.child("chat_list").addValueEventListener(chatsListener);
+        userChatsList.addValueEventListener(chatsListener);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
@@ -152,9 +159,10 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.main_menu_add_chat:
                 Chat newChat = new Chat("new Chat!", "нет сообщений", new Date().getTime());
-                DatabaseReference newChatRef = databaseReference.child("chat_list").push();
+                DatabaseReference newChatRef = userChatsList.push();
                 newChat.setId(newChatRef.getKey());
                 newChatRef.setValue(newChat);
+                chatsSettingReference.child(newChat.getId()).child("users").child(email.substring(0, email.length() - 4)).setValue(true);
                 Log.d(TAG, "add chat with key: " + newChat.getId());
             default:
                 return true;
