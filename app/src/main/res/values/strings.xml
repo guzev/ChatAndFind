@@ -9,4 +9,8 @@
     <string name="write_email">Напишите e-mail пользователя, которого хотите добавить</string>
     <string name="add_user_button">Добавить в чат</string>
     <string name="this_user_isnot_exist">Такой пользователь не найден</string>
+    <string name="menu_rename_chat">Переименовать чат</string>
+    <string name="rename_chat">Введите новое название чата</string>
+    <string name="rename_chat_error">Недопутимое название чата</string>
+    <string name="rename_chat_button">Переименовать</string>
 </resources>

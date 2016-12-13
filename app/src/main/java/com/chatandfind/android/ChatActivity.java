@@ -18,6 +18,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.chatandfind.android.databaseObjects.Chat;
 import com.chatandfind.android.databaseObjects.Message;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
@@ -28,11 +29,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Map;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
-public class ChatActivity extends AppCompatActivity{
+public class ChatActivity extends AppCompatActivity {
     private static final String TAG = "ChatActivity";
+    private final int addUserActivityCode = 1;
+    private final int renameChatActivityCode = 2;
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         public TextView messageTextView;
@@ -82,8 +87,8 @@ public class ChatActivity extends AppCompatActivity{
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         email = mFirebaseUser.getEmail();
         databaseReference = FirebaseDatabase.getInstance().getReference();
-        chatDatabaseReference = databaseReference.child("chats").child(chatId);
-        settingsDatabaseReference = databaseReference.child("chats_settings").child(chatId);
+        chatDatabaseReference = databaseReference.child(Config.CHATS).child(chatId);
+        settingsDatabaseReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId);
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -167,18 +172,60 @@ public class ChatActivity extends AppCompatActivity{
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.chat_add_user:
-                Intent intent = new Intent(this, AddUserActivity.class);
-                startActivityForResult(intent, 1);
-            default:
-                return true;
+                Intent add_user_intent = new Intent(this, AddUserActivity.class);
+                startActivityForResult(add_user_intent, addUserActivityCode);
+                break;
+            case R.id.chat_rename:
+                Intent chat_rename_intent = new Intent(this, RenameChatActivity.class);
+                startActivityForResult(chat_rename_intent, renameChatActivityCode);
+                break;
         }
+        return true;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (data != null) {
-            String new_email = data.getStringExtra(Config.NEW_USER_EMAIL);
-            settingsDatabaseReference.child("users").child(new_email).setValue(true);
+            switch (requestCode) {
+                case addUserActivityCode:
+                    final String new_email = data.getStringExtra(Config.NEW_USER_EMAIL);
+                    settingsDatabaseReference.child("users").child(new_email).setValue(true);
+                    databaseReference.child(Config.CHAT_LIST).child(email.substring(0, email.length() - 4)).child(chatId).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                            Chat newChat = new Chat((String) map.get("title"), (String) map.get("lastMessage"), (Long) map.get("lastMessageTime"));
+                            newChat.setId(chatId);
+                            FirebaseDatabase.getInstance().getReference().child(Config.CHAT_LIST).child(new_email).child(chatId).setValue(newChat);
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                    break;
+                case renameChatActivityCode:
+                    final String new_chat_name = data.getStringExtra(Config.NEW_CHAT_NAME);
+                    Log.d(TAG, "new chat name: " + new_chat_name);
+                    settingsDatabaseReference.child("title").setValue(new_chat_name);
+                    settingsDatabaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                                String user_email = userSnapshot.getKey();
+                                Log.d(TAG, "user email: " + user_email);
+                                databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("title").setValue(new_chat_name);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                    break;
+            }
         }
     }
 }

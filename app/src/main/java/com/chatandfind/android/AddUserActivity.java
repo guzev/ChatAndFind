@@ -33,7 +33,7 @@ public class AddUserActivity extends AppCompatActivity {
         editText = (EditText) findViewById(R.id.add_user_edit_text);
         errorTextView = (TextView) findViewById(R.id.add_user_error_text);
         addUserButton = (Button) findViewById(R.id.add_user_button);
-        databaseReference = FirebaseDatabase.getInstance().getReference().child("users");
+        databaseReference = FirebaseDatabase.getInstance().getReference().child(Config.USERS);
 
         addUserButton.setOnClickListener(new View.OnClickListener() {
             @Override

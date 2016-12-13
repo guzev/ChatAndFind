@@ -11,15 +11,11 @@ import android.view.MenuItem;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
-import com.bumptech.glide.Glide;
 import com.chatandfind.android.databaseObjects.Chat;
-import com.chatandfind.android.databaseObjects.Message;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -30,7 +26,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
@@ -95,13 +90,13 @@ public class MainActivity extends AppCompatActivity {
             return;
         } else {
             email = mFirebaseUser.getEmail();
-            FirebaseDatabase.getInstance().getReference().child("users").child(email.substring(0, email.length() - 4)).setValue(true);
+            FirebaseDatabase.getInstance().getReference().child(Config.USERS).child(email.substring(0, email.length() - 4)).setValue(true);
         }
 
         //initial database
         databaseReference = FirebaseDatabase.getInstance().getReference();
-        userChatsList = databaseReference.child("chat_list").child(email.substring(0, email.length() - 4));
-        chatsSettingReference = databaseReference.child("chats_settings");
+        userChatsList = databaseReference.child(Config.CHAT_LIST).child(email.substring(0, email.length() - 4));
+        chatsSettingReference = databaseReference.child(Config.CHATS_SETTINGS);
         recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, userChatsList) {
             @Override
             protected void populateViewHolder(ChatViewHolder viewHolder, Chat model, int position) {
@@ -158,10 +153,11 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, SignInActivity.class));
                 return true;
             case R.id.main_menu_add_chat:
-                Chat newChat = new Chat("new Chat!", "нет сообщений", new Date().getTime());
+                Chat newChat = new Chat(Config.DEFAULT_CHAT_NAME, "нет сообщений", new Date().getTime());
                 DatabaseReference newChatRef = userChatsList.push();
                 newChat.setId(newChatRef.getKey());
                 newChatRef.setValue(newChat);
+                chatsSettingReference.child(newChat.getId()).child("title").setValue(Config.DEFAULT_CHAT_NAME);
                 chatsSettingReference.child(newChat.getId()).child("users").child(email.substring(0, email.length() - 4)).setValue(true);
                 Log.d(TAG, "add chat with key: " + newChat.getId());
             default:

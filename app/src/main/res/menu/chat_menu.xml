@@ -5,5 +5,8 @@
         android:id="@+id/chat_add_user"
         app:showAsAction="ifRoom"
         android:title="@string/add_user_to_chat" />
-
+    <item
+        android:id="@+id/chat_rename"
+        app:showAsAction="never"
+        android:title="@string/menu_rename_chat" />
 </menu>

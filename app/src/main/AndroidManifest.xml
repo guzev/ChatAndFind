@@ -24,7 +24,8 @@
             android:name=".SignInActivity"
             android:label="@string/title_activity_sing_in" />
         <activity android:name=".ChatActivity" />
-        <activity android:name=".AddUserActivity"></activity>
+        <activity android:name=".AddUserActivity" />
+        <activity android:name=".RenameChatActivity"></activity>
     </application>
 
 </manifest>
