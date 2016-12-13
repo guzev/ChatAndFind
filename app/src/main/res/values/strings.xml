@@ -17,4 +17,5 @@
     <string name="show_list_of_members">Показать участников чата</string>
     <string name="main_activity_list_of_chats">Ваши чаты</string>
     <string name="main_activity_label">Список чатов</string>
+    <string name="chat_activity_to_map">Выйти на карту</string>
 </resources>

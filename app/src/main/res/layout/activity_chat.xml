@@ -2,15 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    >
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/chat_activity_toolbar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/tool_bar_height"
-        android:background="@color/orange"/>
+        android:background="@color/blue"/>
 
     <RelativeLayout
+        android:background="@drawable/new_york"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
     <LinearLayout
@@ -25,7 +27,8 @@
         <EditText
             android:id="@+id/activity_chat_edit_text"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:background="@color/colorWhite"
+            android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
             android:layout_weight="28.74" />
 

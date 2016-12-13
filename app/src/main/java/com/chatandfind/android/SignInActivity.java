@@ -36,7 +36,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
         setContentView(R.layout.activity_sing_in);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
+        .requestIdToken(getResources().getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
 
@@ -87,7 +87,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
                 firebaseAuthWithGoogle(account);
             } else {
                 Toast.makeText(SignInActivity.this, "Google sing in failed.", Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Google sing in failed.");
+                Log.e(TAG, "Google sing in failed. " + result.getStatus());
             }
         }
     }
