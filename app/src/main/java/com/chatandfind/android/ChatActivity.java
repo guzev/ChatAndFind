@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -57,9 +58,11 @@ public class ChatActivity extends AppCompatActivity {
     ProgressBar progressBar;
     TextView statusText;
     String chatId;
+    String chatName;
     Button sendButton;
     EditText editText;
     String shortEmail;
+    Toolbar toolbar;
 
     //Firebase variables
     private FirebaseAuth mFirebaseAuth;
@@ -76,12 +79,15 @@ public class ChatActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         chatId = (String) intent.getCharSequenceExtra(Config.CHAT_ID_TAG);
+        chatName = (String) intent.getCharSequenceExtra(Config.CHAT_NAME_TAG);
 
         recyclerView = (RecyclerView) findViewById(R.id.activity_chat_recycler_view);
         progressBar = (ProgressBar) findViewById(R.id.activity_chat_progress_bar);
         statusText = (TextView) findViewById(R.id.activity_chat_status_text);
         sendButton = (Button) findViewById(R.id.activity_chat_send_button);
         editText = (EditText) findViewById(R.id.activity_chat_edit_text);
+        toolbar = (Toolbar) findViewById(R.id.chat_activity_toolbar);
+        setSupportActionBar(toolbar);
 
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
@@ -90,6 +96,15 @@ public class ChatActivity extends AppCompatActivity {
         databaseReference = FirebaseDatabase.getInstance().getReference();
         chatDatabaseReference = databaseReference.child(Config.CHATS).child(chatId);
         settingsDatabaseReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId);
+        settingsDatabaseReference.child("title").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                getSupportActionBar().setTitle((String) dataSnapshot.getValue());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {

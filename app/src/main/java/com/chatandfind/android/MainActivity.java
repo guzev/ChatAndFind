@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public String id;
+        public String chatName;
         public TextView title;
         public TextView lastMessage;
         public TextView lastMessageTime;
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "onClick " + getAdapterPosition());
             Intent intent = new Intent(mContext, ChatActivity.class);
             intent.putExtra(Config.CHAT_ID_TAG, id);
+            intent.putExtra(Config.CHAT_NAME_TAG, chatName);
             mContext.startActivity(intent);
         }
     }
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     String shortEmail;
     String displayName;
     String photoUrl;
+    Toolbar toolbar;
 
 
     @Override
@@ -82,6 +86,9 @@ public class MainActivity extends AppCompatActivity {
         progressBar = (ProgressBar) findViewById(R.id.activity_main_progressBar);
         recyclerView = (RecyclerView) findViewById(R.id.activity_main_recyclerView);
         statusText = (TextView) findViewById(R.id.activity_main_statusText);
+        toolbar = (Toolbar) findViewById(R.id.main_activity_toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(R.string.main_activity_list_of_chats);
         mContext = this;
 
         //initial database references
@@ -118,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                 String date = sdfDate.format(new Date(model.getLastMessageTime()));
                 viewHolder.lastMessageTime.setText(date);
                 viewHolder.id = model.getId();
+                viewHolder.chatName = model.getTitle();
             }
         };
 

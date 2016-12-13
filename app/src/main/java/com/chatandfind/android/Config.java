@@ -13,4 +13,5 @@ public class Config {
     public static final String CHAT_LIST = "chat_list";
     public static final String CHATS_SETTINGS = "chats_settings";
     public static final String USERS = "users";
+    public static final String CHAT_NAME_TAG = "chat_name";
 }

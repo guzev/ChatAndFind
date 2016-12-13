@@ -15,4 +15,6 @@
     <string name="rename_chat_error">Недопутимое название чата</string>
     <string name="rename_chat_button">Переименовать</string>
     <string name="show_list_of_members">Показать участников чата</string>
+    <string name="main_activity_list_of_chats">Ваши чаты</string>
+    <string name="main_activity_label">Список чатов</string>
 </resources>

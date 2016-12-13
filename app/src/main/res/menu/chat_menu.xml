@@ -4,7 +4,8 @@
     <item
         android:id="@+id/chat_add_user"
         app:showAsAction="ifRoom"
-        android:title="@string/add_user_to_chat" />
+        android:title="@string/add_user_to_chat"
+        android:icon="@drawable/add_user_icon"/>
     <item
         android:id="@+id/chat_rename"
         app:showAsAction="never"
