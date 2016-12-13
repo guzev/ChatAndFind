@@ -10,6 +10,11 @@
         app:showAsAction="never"
         android:title="@string/menu_rename_chat" />
     <item
+        android:id="@+id/show_list_of_members"
+        app:showAsAction="never"
+        android:title="@string/show_list_of_members"
+        />
+    <item
         android:id="@+id/exit_chat"
         app:showAsAction="never"
         android:title="@string/menu_exit_chat" />

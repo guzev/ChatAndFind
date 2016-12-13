@@ -29,7 +29,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.Date;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -60,7 +59,7 @@ public class ChatActivity extends AppCompatActivity {
     String chatId;
     Button sendButton;
     EditText editText;
-    String email;
+    String shortEmail;
 
     //Firebase variables
     private FirebaseAuth mFirebaseAuth;
@@ -86,7 +85,8 @@ public class ChatActivity extends AppCompatActivity {
 
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        email = mFirebaseUser.getEmail();
+        shortEmail = mFirebaseUser.getEmail();
+        shortEmail = shortEmail.substring(0, shortEmail.length() - 4);
         databaseReference = FirebaseDatabase.getInstance().getReference();
         chatDatabaseReference = databaseReference.child(Config.CHATS).child(chatId);
         settingsDatabaseReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId);
@@ -198,9 +198,14 @@ public class ChatActivity extends AppCompatActivity {
                 Intent chat_rename_intent = new Intent(this, RenameChatActivity.class);
                 startActivityForResult(chat_rename_intent, renameChatActivityCode);
                 break;
+            case R.id.show_list_of_members:
+                Intent showListIntent = new Intent(this, chatMembersActivity.class);
+                showListIntent.putExtra(Config.CHAT_ID_TAG, chatId);
+                startActivity(showListIntent);
+                break;
             case R.id.exit_chat:
-                settingsDatabaseReference.child("users").child(email.substring(0, email.length() - 4)).setValue(null);
-                databaseReference.child(Config.CHAT_LIST).child(email.substring(0, email.length() - 4)).child(chatId).setValue(null);
+                settingsDatabaseReference.child("users").child(shortEmail).setValue(null);
+                databaseReference.child(Config.CHAT_LIST).child(shortEmail).child(chatId).setValue(null);
                 finish();
         }
         return true;
@@ -212,8 +217,18 @@ public class ChatActivity extends AppCompatActivity {
             switch (requestCode) {
                 case addUserActivityCode:
                     final String new_email = data.getStringExtra(Config.NEW_USER_EMAIL);
-                    settingsDatabaseReference.child("users").child(new_email).setValue(true);
-                    databaseReference.child(Config.CHAT_LIST).child(email.substring(0, email.length() - 4)).child(chatId).addListenerForSingleValueEvent(new ValueEventListener() {
+                    databaseReference.child(Config.USERS).child(new_email).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                            settingsDatabaseReference.child("users").child(new_email).child("displayName").setValue(map.get("display_name"));
+                            settingsDatabaseReference.child("users").child(new_email).child("photoUrl").setValue(map.get("photo"));
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {}
+                    });
+                    databaseReference.child(Config.CHAT_LIST).child(shortEmail).child(chatId).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
@@ -223,9 +238,7 @@ public class ChatActivity extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
+                        public void onCancelled(DatabaseError databaseError) {}
                     });
                     break;
                 case renameChatActivityCode:
@@ -237,7 +250,7 @@ public class ChatActivity extends AppCompatActivity {
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                                 String user_email = userSnapshot.getKey();
-                                Log.d(TAG, "user email: " + user_email);
+                                Log.d(TAG, "user shortEmail: " + user_email);
                                 databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("title").setValue(new_chat_name);
                             }
                         }

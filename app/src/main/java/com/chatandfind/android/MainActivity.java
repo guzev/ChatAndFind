@@ -69,7 +69,9 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     LinearLayoutManager layoutManager;
     TextView statusText;
-    String email;
+    String shortEmail;
+    String displayName;
+    String photoUrl;
 
 
     @Override
@@ -82,6 +84,9 @@ public class MainActivity extends AppCompatActivity {
         statusText = (TextView) findViewById(R.id.activity_main_statusText);
         mContext = this;
 
+        //initial database references
+        databaseReference = FirebaseDatabase.getInstance().getReference();
+
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         if (mFirebaseUser == null) {
@@ -89,13 +94,19 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         } else {
-            email = mFirebaseUser.getEmail();
-            FirebaseDatabase.getInstance().getReference().child(Config.USERS).child(email.substring(0, email.length() - 4)).setValue(true);
+            shortEmail = mFirebaseUser.getEmail();
+            shortEmail = shortEmail.substring(0, shortEmail.length() - 4);
+            displayName = mFirebaseUser.getDisplayName();
+            databaseReference.child(Config.USERS).child(shortEmail).child("displayName").setValue(displayName);
+            if (mFirebaseUser.getPhotoUrl() != null) {
+                photoUrl = mFirebaseUser.getPhotoUrl().toString();
+                databaseReference.child(Config.USERS).child(shortEmail).child("photoUrl").setValue(photoUrl);
+            } else {
+                photoUrl = null;
+            }
         }
 
-        //initial database
-        databaseReference = FirebaseDatabase.getInstance().getReference();
-        userChatsList = databaseReference.child(Config.CHAT_LIST).child(email.substring(0, email.length() - 4));
+        userChatsList = databaseReference.child(Config.CHAT_LIST).child(shortEmail);
         chatsSettingReference = databaseReference.child(Config.CHATS_SETTINGS);
         recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, userChatsList) {
             @Override
@@ -158,7 +169,8 @@ public class MainActivity extends AppCompatActivity {
                 newChat.setId(newChatRef.getKey());
                 newChatRef.setValue(newChat);
                 chatsSettingReference.child(newChat.getId()).child("title").setValue(Config.DEFAULT_CHAT_NAME);
-                chatsSettingReference.child(newChat.getId()).child("users").child(email.substring(0, email.length() - 4)).setValue(true);
+                chatsSettingReference.child(newChat.getId()).child("users").child(shortEmail).child("displayName").setValue(displayName);
+                chatsSettingReference.child(newChat.getId()).child("users").child(shortEmail).child("photoUrl").setValue(photoUrl);
                 Log.d(TAG, "add chat with key: " + newChat.getId());
             default:
                 return true;
