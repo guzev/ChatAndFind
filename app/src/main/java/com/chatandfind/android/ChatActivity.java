@@ -236,8 +236,8 @@ public class ChatActivity extends AppCompatActivity {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                            settingsDatabaseReference.child("users").child(new_email).child("displayName").setValue(map.get("display_name"));
-                            settingsDatabaseReference.child("users").child(new_email).child("photoUrl").setValue(map.get("photo"));
+                            settingsDatabaseReference.child("users").child(new_email).child("displayName").setValue(map.get("displayName"));
+                            settingsDatabaseReference.child("users").child(new_email).child("photoUrl").setValue(map.get("photoUrl"));
                         }
 
                         @Override
