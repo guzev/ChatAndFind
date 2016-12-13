@@ -9,4 +9,8 @@
         android:id="@+id/chat_rename"
         app:showAsAction="never"
         android:title="@string/menu_rename_chat" />
+    <item
+        android:id="@+id/exit_chat"
+        app:showAsAction="never"
+        android:title="@string/menu_exit_chat" />
 </menu>

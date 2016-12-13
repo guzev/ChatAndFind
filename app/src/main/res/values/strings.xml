@@ -10,6 +10,7 @@
     <string name="add_user_button">Добавить в чат</string>
     <string name="this_user_isnot_exist">Такой пользователь не найден</string>
     <string name="menu_rename_chat">Переименовать чат</string>
+    <string name="menu_exit_chat">Выйти из чата</string>
     <string name="rename_chat">Введите новое название чата</string>
     <string name="rename_chat_error">Недопутимое название чата</string>
     <string name="rename_chat_button">Переименовать</string>

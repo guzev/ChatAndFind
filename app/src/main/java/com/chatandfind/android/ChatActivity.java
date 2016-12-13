@@ -29,6 +29,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Date;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -112,11 +113,29 @@ public class ChatActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Message message = new Message(editText.getText().toString(), mFirebaseUser.getDisplayName(), null);
+                final Message message = new Message(editText.getText().toString(), mFirebaseUser.getDisplayName(), null, System.currentTimeMillis());
                 if (mFirebaseUser.getPhotoUrl() != null) {
                     message.setPhotoUrl(mFirebaseUser.getPhotoUrl().toString());
                 }
                 chatDatabaseReference.push().setValue(message);
+                settingsDatabaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        String text = message.getText();
+                        long time = message.getTime();
+                        for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                            String user_email = userSnapshot.getKey();
+                            databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessage").setValue(text);
+                            databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessageTime").setValue(time);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+                editText.setText("");
             }
         });
 
@@ -179,6 +198,10 @@ public class ChatActivity extends AppCompatActivity {
                 Intent chat_rename_intent = new Intent(this, RenameChatActivity.class);
                 startActivityForResult(chat_rename_intent, renameChatActivityCode);
                 break;
+            case R.id.exit_chat:
+                settingsDatabaseReference.child("users").child(email.substring(0, email.length() - 4)).setValue(null);
+                databaseReference.child(Config.CHAT_LIST).child(email.substring(0, email.length() - 4)).child(chatId).setValue(null);
+                finish();
         }
         return true;
     }
