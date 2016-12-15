@@ -3,10 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="chat_activity_to_map"
+        android:id="@+id/chat_activity_to_map"
         android:title="@string/chat_activity_to_map"
         android:icon="@drawable/to_map"
-        android:showAsAction="always"
         app:showAsAction="always" />
     <item
         android:id="@+id/chat_add_user"

@@ -7,4 +7,9 @@
         <item name="windowActionBar">false</item>
     </style>
 
+    <style name="ToolBarStyle">
+        <item name="android:background">@color/blue</item>
+        <item name="titleTextColor">@color/colorWhite</item>
+    </style>
+
 </resources>

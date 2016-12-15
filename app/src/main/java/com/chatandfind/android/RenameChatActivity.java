@@ -8,8 +8,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.chatandfind.android.config.Config;
 
 public class RenameChatActivity extends AppCompatActivity {
     EditText editText;

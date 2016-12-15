@@ -19,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.chatandfind.android.config.Config;
 import com.chatandfind.android.databaseObjects.Chat;
 import com.chatandfind.android.databaseObjects.Message;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -217,6 +218,10 @@ public class ChatActivity extends AppCompatActivity {
                 Intent showListIntent = new Intent(this, chatMembersActivity.class);
                 showListIntent.putExtra(Config.CHAT_ID_TAG, chatId);
                 startActivity(showListIntent);
+                break;
+            case R.id.chat_activity_to_map:
+                Intent toMapIntent = new Intent(this, GoogleMapsActivity.class);
+                startActivity(toMapIntent);
                 break;
             case R.id.exit_chat:
                 settingsDatabaseReference.child("users").child(shortEmail).setValue(null);

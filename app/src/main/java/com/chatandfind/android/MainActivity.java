@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
+import com.chatandfind.android.config.Config;
 import com.chatandfind.android.databaseObjects.Chat;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
@@ -183,5 +184,11 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return true;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
     }
 }

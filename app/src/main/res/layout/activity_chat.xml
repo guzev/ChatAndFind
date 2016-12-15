@@ -9,7 +9,7 @@
         android:id="@+id/chat_activity_toolbar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/tool_bar_height"
-        android:background="@color/blue"/>
+        style="@style/ToolBarStyle" />
 
     <RelativeLayout
         android:background="@drawable/new_york"
@@ -58,8 +58,7 @@
     <TextView
         android:id="@+id/activity_chat_status_text"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor=""/>
+        android:layout_height="wrap_content" />
     </RelativeLayout>
 
 </LinearLayout>
