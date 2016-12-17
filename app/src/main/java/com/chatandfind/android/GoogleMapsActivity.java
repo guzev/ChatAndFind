@@ -1,5 +1,7 @@
 package com.chatandfind.android;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import android.*;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -20,6 +22,13 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.chatandfind.android.config.Config;
+import android.content.Context;
+import android.graphics.Color;
+import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
+import android.util.Log;
+
+import com.chatandfind.android.DirectionsLoader.DirectionsLoader;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -38,6 +47,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.concurrent.ExecutionException;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCallback {
     private static final String TAG = "GoogleMapsActivity";
@@ -214,5 +228,60 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         canvas.drawBitmap(bitmap, rect, rect, paint);
 
         return output;
+
+        // Add a marker in Sydney and move the camera
+        //LatLng sydney = new LatLng(-34, 151);
+        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
     }
+
+    public void showDirection(Context context, long firstLat, long firstLong, long secondLat, long secondLong) {
+
+        DirectionsLoader loader = new DirectionsLoader(context,firstLat, firstLong, secondLat, secondLong);
+
+        List<List<HashMap<String, String>>> result = loader.loadInBackground();
+
+        ArrayList<LatLng> points;
+        PolylineOptions lineOptions = null;
+
+        // Traversing through all the routes
+        for (int i = 0; i < result.size(); i++) {
+            points = new ArrayList<>();
+            lineOptions = new PolylineOptions();
+
+            // Fetching i-th route
+            List<HashMap<String, String>> path = result.get(i);
+
+            // Fetching all the points in i-th route
+            for (int j = 0; j < path.size(); j++) {
+                HashMap<String, String> point = path.get(j);
+
+                double lat = Double.parseDouble(point.get("lat"));
+                double lng = Double.parseDouble(point.get("lng"));
+                LatLng position = new LatLng(lat, lng);
+
+                points.add(position);
+            }
+
+            // Adding all the points in the route to LineOptions
+            lineOptions.addAll(points);
+            lineOptions.width(10);
+            lineOptions.color(Color.RED);
+
+            Log.d("onPostExecute","onPostExecute lineoptions decoded");
+
+        }
+
+        // Drawing polyline in the Google Map for the i-th route
+        if(lineOptions != null) {
+            mMap.addPolyline(lineOptions);
+        }
+        else {
+            Log.d("showDirection","without Polylines drawn");
+        }
+    }
+
+
+
 }
