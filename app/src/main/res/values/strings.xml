@@ -1,22 +1,31 @@
 <resources>
     <string name="app_name">ChatAndFind</string>
     <string name="title_activity_sing_in">SingInActivity</string>
+    <string name="title_activity_google_maps">Map</string>
+
+    <!--strings for menu in Main Activity -->
     <string name="sign_out">Выйти</string>
     <string name="add_chat">Создать новый чат</string>
-    <string name="no_chats">Нет чатов</string>
+
+    <!--strings for menu in Chat Activity -->
     <string name="add_user_to_chat">Добавить собеседника</string>
-    <string name="title_activity_add_user">Add User to Chat</string>
-    <string name="write_email">Напишите e-mail пользователя, которого хотите добавить</string>
-    <string name="add_user_button">Добавить в чат</string>
-    <string name="this_user_isnot_exist">Такой пользователь не найден</string>
     <string name="menu_rename_chat">Переименовать чат</string>
+    <string name="chat_activity_to_map">Выйти на карту</string>
+    <string name="show_list_of_members">Показать участников чата</string>
     <string name="menu_exit_chat">Выйти из чата</string>
+
+    <!-- Rename Chat Activity-->
     <string name="rename_chat">Введите новое название чата</string>
     <string name="rename_chat_error">Недопутимое название чата</string>
     <string name="rename_chat_button">Переименовать</string>
-    <string name="show_list_of_members">Показать участников чата</string>
+
+    <!--Add User Activity-->
+    <string name="write_email">Напишите e-mail пользователя, которого хотите добавить</string>
+    <string name="add_user_button">Добавить в чат</string>
+    <string name="this_user_is_not_exist">Такой пользователь не найден</string>
+
+    <!-- Main Activity-->
+    <string name="no_chats">Нет чатов</string>
     <string name="main_activity_list_of_chats">Ваши чаты</string>
-    <string name="main_activity_label">Список чатов</string>
-    <string name="chat_activity_to_map">Выйти на карту</string>
-    <string name="title_activity_google_maps">Map</string>
+
 </resources>

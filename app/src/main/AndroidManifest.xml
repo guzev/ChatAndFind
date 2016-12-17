@@ -30,7 +30,9 @@
         <activity
             android:name=".SignInActivity"
             android:label="@string/title_activity_sing_in" />
-        <activity android:name=".ChatActivity" />
+        <activity
+            android:name=".ChatActivity"
+            android:windowSoftInputMode="stateHidden" />
         <activity android:name=".AddUserActivity" />
         <activity android:name=".RenameChatActivity" />
         <activity android:name=".chatMembersActivity" />
@@ -48,7 +50,12 @@
 
         <activity
             android:name=".GoogleMapsActivity"
-            android:label="@string/title_activity_google_maps"></activity>
+            android:label="@string/title_activity_google_maps" />
+
+        <service
+            android:name=".MessegesService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

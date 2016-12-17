@@ -54,16 +54,15 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    RecyclerView recyclerView;
-    LinearLayoutManager layoutManager;
-    ProgressBar progressBar;
-    TextView statusText;
-    String chatId;
-    String chatName;
-    Button sendButton;
-    EditText editText;
-    String shortEmail;
-    Toolbar toolbar;
+    private RecyclerView recyclerView;
+    private LinearLayoutManager layoutManager;
+    private ProgressBar progressBar;
+    private TextView statusText;
+    private String chatId;
+    private Button sendButton;
+    private EditText editText;
+    private String encodedEmail;
+    private Toolbar toolbar;
 
     //Firebase variables
     private FirebaseAuth mFirebaseAuth;
@@ -75,12 +74,12 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
         Intent intent = getIntent();
         chatId = (String) intent.getCharSequenceExtra(Config.CHAT_ID_TAG);
-        chatName = (String) intent.getCharSequenceExtra(Config.CHAT_NAME_TAG);
 
         recyclerView = (RecyclerView) findViewById(R.id.activity_chat_recycler_view);
         progressBar = (ProgressBar) findViewById(R.id.activity_chat_progress_bar);
@@ -92,8 +91,7 @@ public class ChatActivity extends AppCompatActivity {
 
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        shortEmail = mFirebaseUser.getEmail();
-        shortEmail = shortEmail.substring(0, shortEmail.length() - 4);
+        encodedEmail = Config.encodeForFirebaseKey(Config.makeShortEmail(mFirebaseUser.getEmail()));
         databaseReference = FirebaseDatabase.getInstance().getReference();
         chatDatabaseReference = databaseReference.child(Config.CHATS).child(chatId);
         settingsDatabaseReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId);
@@ -104,7 +102,8 @@ public class ChatActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+            }
         });
         editText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -194,6 +193,16 @@ public class ChatActivity extends AppCompatActivity {
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
+
+        chatDatabaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
     }
 
     @Override
@@ -221,11 +230,24 @@ public class ChatActivity extends AppCompatActivity {
                 break;
             case R.id.chat_activity_to_map:
                 Intent toMapIntent = new Intent(this, GoogleMapsActivity.class);
+                toMapIntent.putExtra(Config.CHAT_ID_TAG, chatId);
                 startActivity(toMapIntent);
                 break;
             case R.id.exit_chat:
-                settingsDatabaseReference.child("users").child(shortEmail).setValue(null);
-                databaseReference.child(Config.CHAT_LIST).child(shortEmail).child(chatId).setValue(null);
+                settingsDatabaseReference.child("users").child(encodedEmail).setValue(null);
+                databaseReference.child(Config.CHAT_LIST).child(encodedEmail).child(chatId).setValue(null);
+                settingsDatabaseReference.child("users").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (!dataSnapshot.exists()) {
+                            settingsDatabaseReference.setValue(null);
+                            chatDatabaseReference.setValue(null);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {}
+                });
                 finish();
         }
         return true;
@@ -246,9 +268,10 @@ public class ChatActivity extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onCancelled(DatabaseError databaseError) {}
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
                     });
-                    databaseReference.child(Config.CHAT_LIST).child(shortEmail).child(chatId).addListenerForSingleValueEvent(new ValueEventListener() {
+                    databaseReference.child(Config.CHAT_LIST).child(encodedEmail).child(chatId).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
@@ -258,7 +281,8 @@ public class ChatActivity extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onCancelled(DatabaseError databaseError) {}
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
                     });
                     break;
                 case renameChatActivityCode:
@@ -270,7 +294,7 @@ public class ChatActivity extends AppCompatActivity {
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                                 String user_email = userSnapshot.getKey();
-                                Log.d(TAG, "user shortEmail: " + user_email);
+                                Log.d(TAG, "user encodedEmail: " + user_email);
                                 databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("title").setValue(new_chat_name);
                             }
                         }

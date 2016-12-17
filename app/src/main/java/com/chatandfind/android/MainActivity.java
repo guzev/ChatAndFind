@@ -2,6 +2,12 @@ package com.chatandfind.android;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -36,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public String id;
-        public String chatName;
         public TextView title;
         public TextView lastMessage;
         public TextView lastMessageTime;
@@ -55,10 +60,40 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "onClick " + getAdapterPosition());
             Intent intent = new Intent(mContext, ChatActivity.class);
             intent.putExtra(Config.CHAT_ID_TAG, id);
-            intent.putExtra(Config.CHAT_NAME_TAG, chatName);
             mContext.startActivity(intent);
         }
     }
+
+    private LocationListener locationListener = new LocationListener() {
+        private static final String TAG = "locationListener";
+
+        @Override
+        public void onLocationChanged(Location location) {
+            Log.d(TAG, location.getProvider() + " long: " + location.getLongitude() + " lat: " + location.getLatitude());
+            databaseReference.child(Config.USERS).child(encodedEmail).child("latitude").setValue(location.getLatitude());
+            databaseReference.child(Config.USERS).child(encodedEmail).child("longitude").setValue(location.getLongitude());
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {
+            Log.d(TAG, "s  -> " + String.valueOf(i));
+            if (s.equals(LocationManager.GPS_PROVIDER)) {
+                Log.d(TAG, "GPS status: " + String.valueOf(i));
+            } else if (s.equals(LocationManager.NETWORK_PROVIDER)) {
+                Log.d(TAG, "Network status: " + String.valueOf(i));
+            }
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+            Log.d(TAG, "onProviderEnabled: " + s);
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+            Log.d(TAG, "onProviderDisabled: " + s);
+        }
+    };
 
     //Firebase variables
     private FirebaseAuth mFirebaseAuth;
@@ -69,14 +104,16 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseRecyclerAdapter<Chat, MainActivity.ChatViewHolder> recyclerAdapter;
 
 
-    ProgressBar progressBar;
-    RecyclerView recyclerView;
-    LinearLayoutManager layoutManager;
-    TextView statusText;
-    String shortEmail;
-    String displayName;
-    String photoUrl;
-    Toolbar toolbar;
+    private ProgressBar progressBar;
+    private RecyclerView recyclerView;
+    private LinearLayoutManager layoutManager;
+    private TextView statusText;
+    private String encodedEmail;
+    private String displayName;
+    private String photoUrl;
+
+    private Toolbar toolbar;
+    private LocationManager locationManager;
 
 
     @Override
@@ -102,19 +139,18 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         } else {
-            shortEmail = mFirebaseUser.getEmail();
-            shortEmail = shortEmail.substring(0, shortEmail.length() - 4);
+            encodedEmail = Config.encodeForFirebaseKey(Config.makeShortEmail(mFirebaseUser.getEmail()));
             displayName = mFirebaseUser.getDisplayName();
-            databaseReference.child(Config.USERS).child(shortEmail).child("displayName").setValue(displayName);
+            databaseReference.child(Config.USERS).child(encodedEmail).child("displayName").setValue(displayName);
             if (mFirebaseUser.getPhotoUrl() != null) {
                 photoUrl = mFirebaseUser.getPhotoUrl().toString();
-                databaseReference.child(Config.USERS).child(shortEmail).child("photoUrl").setValue(photoUrl);
+                databaseReference.child(Config.USERS).child(encodedEmail).child("photoUrl").setValue(photoUrl);
             } else {
                 photoUrl = null;
             }
         }
 
-        userChatsList = databaseReference.child(Config.CHAT_LIST).child(shortEmail);
+        userChatsList = databaseReference.child(Config.CHAT_LIST).child(encodedEmail);
         chatsSettingReference = databaseReference.child(Config.CHATS_SETTINGS);
         recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, userChatsList) {
             @Override
@@ -126,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
                 String date = sdfDate.format(new Date(model.getLastMessageTime()));
                 viewHolder.lastMessageTime.setText(date);
                 viewHolder.id = model.getId();
-                viewHolder.chatName = model.getTitle();
             }
         };
 
@@ -156,6 +191,14 @@ public class MainActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
+
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        Log.d(TAG, "GPS: " + locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) + " Network: " + locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
+
+        Intent serviceIntent = new Intent(this, MessegesService.class);
+        serviceIntent.putExtra(Config.ENC_EMAIL_TAG, encodedEmail);
+        startService(serviceIntent);
     }
 
     @Override
@@ -178,8 +221,8 @@ public class MainActivity extends AppCompatActivity {
                 newChat.setId(newChatRef.getKey());
                 newChatRef.setValue(newChat);
                 chatsSettingReference.child(newChat.getId()).child("title").setValue(Config.DEFAULT_CHAT_NAME);
-                chatsSettingReference.child(newChat.getId()).child("users").child(shortEmail).child("displayName").setValue(displayName);
-                chatsSettingReference.child(newChat.getId()).child("users").child(shortEmail).child("photoUrl").setValue(photoUrl);
+                chatsSettingReference.child(newChat.getId()).child("users").child(encodedEmail).child("displayName").setValue(displayName);
+                chatsSettingReference.child(newChat.getId()).child("users").child(encodedEmail).child("photoUrl").setValue(photoUrl);
                 Log.d(TAG, "add chat with key: " + newChat.getId());
             default:
                 return true;
@@ -190,5 +233,28 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "don't have location permission");
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, Config.MY_LOCATION_REQUEST_CODE);
+        }
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5 * 1000, 10, locationListener);
+        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5 * 1000, 10, locationListener);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "don't have location permission");
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, Config.MY_LOCATION_REQUEST_CODE);
+        }
+        locationManager.removeUpdates(locationListener);
     }
 }

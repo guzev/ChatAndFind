@@ -28,7 +28,7 @@ public class RenameChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String newName = editText.getText().toString();
-                if (newName.length() > 0) {
+                if (newName.length() > 0 && newName.equals(Config.encodeForFirebaseKey(newName))) {
                     Intent intent = new Intent();
                     intent.putExtra(Config.NEW_CHAT_NAME, newName);
                     setResult(RESULT_OK, intent);

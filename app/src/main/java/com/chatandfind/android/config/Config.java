@@ -13,5 +13,26 @@ public class Config {
     public static final String CHAT_LIST = "chat_list";
     public static final String CHATS_SETTINGS = "chats_settings";
     public static final String USERS = "users";
-    public static final String CHAT_NAME_TAG = "chat_name";
+    public static final String ENC_EMAIL_TAG = "enc_email";
+
+    public static final int MY_LOCATION_REQUEST_CODE = 1;
+
+    public static String encodeForFirebaseKey(String s) {
+        return s
+                .replace("_", "__")
+                .replace(".", "_P")
+                .replace("$", "_D")
+                .replace("#", "_H")
+                .replace("[", "_O")
+                .replace("]", "_C")
+                .replace("/", "_S");
+    }
+
+    public static String makeShortEmail(String s) {
+        if (s.length() > 4) {
+            return s.substring(0, s.length() - 4);
+        } else {
+            return null;
+        }
+    }
 }
