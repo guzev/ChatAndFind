@@ -129,8 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.INVISIBLE);
                 viewHolder.title.setText(model.getTitle());
                 viewHolder.lastMessage.setText(model.getLastMessage());
-                SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String date = sdfDate.format(new Date(model.getLastMessageTime()));
+                String date = Config.sdfDate.format(new Date(model.getLastMessageTime()));
                 viewHolder.lastMessageTime.setText(date);
                 viewHolder.id = model.getId();
             }
