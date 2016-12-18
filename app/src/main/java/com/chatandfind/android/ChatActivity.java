@@ -94,7 +94,7 @@ public class ChatActivity extends AppCompatActivity {
 
         mFirebaseAuth = mFirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        encodedEmail = Config.encodeForFirebaseKey(Config.makeShortEmail(mFirebaseUser.getEmail()));
+        encodedEmail = Config.encodeForFirebaseKey(mFirebaseUser.getEmail());
         databaseReference = FirebaseDatabase.getInstance().getReference();
         chatDatabaseReference = databaseReference.child(Config.CHATS).child(chatId);
         settingsDatabaseReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId);

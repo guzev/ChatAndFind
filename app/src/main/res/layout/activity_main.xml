@@ -39,7 +39,8 @@
         android:textColor="@color/colorAccent"
         android:visibility="invisible"
         android:text="@string/no_chats"
-        android:layout_alignBottom="@+id/activity_main_progressBar" />
+        android:layout_below="@+id/activity_main_progressBar"
+        android:layout_centerHorizontal="true"/>
 
     <ProgressBar
         android:id="@+id/activity_main_progressBar"

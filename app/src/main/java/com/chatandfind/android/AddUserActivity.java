@@ -43,10 +43,7 @@ public class AddUserActivity extends AppCompatActivity {
                 databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        String encodedEmail = Config.makeShortEmail(email);
-                        if (encodedEmail != null) {
-                            encodedEmail = Config.encodeForFirebaseKey(encodedEmail);
-                        }
+                        String encodedEmail = Config.encodeForFirebaseKey(email);
                         if (dataSnapshot.hasChild(encodedEmail)) {
                             Intent intent = new Intent();
                             intent.putExtra(Config.NEW_USER_EMAIL, encodedEmail);

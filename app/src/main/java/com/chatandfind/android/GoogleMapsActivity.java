@@ -69,7 +69,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
 
         chatId = getIntent().getStringExtra(Config.CHAT_ID_TAG);
         mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        encodedEmail = Config.encodeForFirebaseKey(Config.makeShortEmail(mFirebaseUser.getEmail()));
+        encodedEmail = Config.encodeForFirebaseKey(mFirebaseUser.getEmail());
         databaseReference = FirebaseDatabase.getInstance().getReference();
         userReference = databaseReference.child(Config.USERS).child(encodedEmail);
         chatSettingsReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId).child("users");

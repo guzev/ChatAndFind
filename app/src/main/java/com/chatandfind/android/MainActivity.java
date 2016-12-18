@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         } else {
-            encodedEmail = Config.encodeForFirebaseKey(Config.makeShortEmail(mFirebaseUser.getEmail()));
+            encodedEmail = Config.encodeForFirebaseKey(mFirebaseUser.getEmail());
             displayName = mFirebaseUser.getDisplayName();
             databaseReference.child(Config.USERS).child(encodedEmail).child("displayName").setValue(displayName);
             if (mFirebaseUser.getPhotoUrl() != null) {
