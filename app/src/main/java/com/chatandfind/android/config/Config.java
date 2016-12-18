@@ -27,12 +27,4 @@ public class Config {
                 .replace("]", "_C")
                 .replace("/", "_S");
     }
-
-    public static String makeShortEmail(String s) {
-        if (s.length() > 4) {
-            return s.substring(0, s.length() - 4);
-        } else {
-            return null;
-        }
-    }
 }
