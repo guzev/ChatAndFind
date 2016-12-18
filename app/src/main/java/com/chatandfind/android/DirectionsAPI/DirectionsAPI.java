@@ -17,12 +17,7 @@ public class DirectionsAPI {
 
     private static String API_KEY = "AIzaSyAsrCZII1MWCOVZRtOounYSWi3mT5zZSzo";
 
-    public static HttpURLConnection getDirection(long latitude, long longtitude, String adress) throws IOException{
-        Uri url = (BASE_URL).buildUpon().appendQueryParameter("origin", latitude + "" + longtitude).appendQueryParameter("destination", adress).appendQueryParameter("key", API_KEY).build();
-        return (HttpURLConnection) new URL(url.toString()).openConnection();
-    }
-
-    public static HttpURLConnection getDirection(long myLatitude, long myLongtitude, long destinationLatitude, long destinationLongtitude) throws IOException{
+    public static HttpURLConnection getDirection(double myLatitude, double myLongtitude, double destinationLatitude, double destinationLongtitude) throws IOException{
         Uri url = (BASE_URL).buildUpon().appendQueryParameter("origin", myLatitude + "" + myLongtitude).appendQueryParameter("destination", destinationLatitude + "" + destinationLongtitude).appendQueryParameter("key", API_KEY).build();
         return (HttpURLConnection) new URL(url.toString()).openConnection();
     }

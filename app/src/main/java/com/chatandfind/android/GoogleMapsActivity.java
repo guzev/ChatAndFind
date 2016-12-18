@@ -236,7 +236,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
 
     }
 
-    public void showDirection(Context context, long firstLat, long firstLong, long secondLat, long secondLong) {
+    public void showDirection(Context context, double firstLat, double firstLong, double secondLat, double secondLong) {
 
         DirectionsLoader loader = new DirectionsLoader(context,firstLat, firstLong, secondLat, secondLong);
 

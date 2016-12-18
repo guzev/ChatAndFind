@@ -24,9 +24,9 @@ import java.util.List;
 public class DirectionsLoader extends AsyncTaskLoader<List<List<HashMap<String, String>>>> {
 
     private static String TAG = "DirectionsLoader";
-    private long firstLat, firstLong, secondLat, secondLong;
+    private double firstLat, firstLong, secondLat, secondLong;
 
-    public DirectionsLoader(Context context, long firstLat, long firstLong, long secondLat, long secondLong) {
+    public DirectionsLoader(Context context, double firstLat, double firstLong, double secondLat, double secondLong) {
         super(context);
         this.firstLat = firstLat;
         this.firstLong = firstLong;
