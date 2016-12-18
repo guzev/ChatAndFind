@@ -22,6 +22,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
 import com.chatandfind.android.config.Config;
 import com.chatandfind.android.databaseObjects.Chat;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -37,6 +39,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static Context mContext;
@@ -46,12 +50,14 @@ public class MainActivity extends AppCompatActivity {
         public TextView title;
         public TextView lastMessage;
         public TextView lastMessageTime;
+        public CircleImageView senderImageView;
 
         public ChatViewHolder(View itemView) {
             super(itemView);
             title = (TextView) itemView.findViewById(R.id.chatName);
             lastMessage = (TextView) itemView.findViewById(R.id.lastMessage);
             lastMessageTime = (TextView) itemView.findViewById(R.id.lastTime);
+            senderImageView = (CircleImageView) itemView.findViewById(R.id.senderImageView);
             itemView.setOnClickListener(this);
         }
 
@@ -81,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
     private String encodedEmail;
     private String displayName;
     private String photoUrl;
+    private RequestManager glide;
 
     private Toolbar toolbar;
 
@@ -98,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.main_activity_list_of_chats);
         mContext = this;
+        glide = Glide.with(this);
 
         //initial database references
         databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -131,6 +139,9 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder.lastMessage.setText(model.getLastMessage());
                 String date = Config.sdfDate.format(new Date(model.getLastMessageTime()));
                 viewHolder.lastMessageTime.setText(date);
+                if (model.getPhotoUrl() != null) {
+                    glide.load(model.getPhotoUrl()).into(viewHolder.senderImageView);
+                }
                 viewHolder.id = model.getId();
             }
         };
@@ -184,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, SignInActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                 return true;
             case R.id.main_menu_add_chat:
-                Chat newChat = new Chat(Config.DEFAULT_CHAT_NAME, "нет сообщений", new Date().getTime());
+                Chat newChat = new Chat(Config.DEFAULT_CHAT_NAME, "нет сообщений", new Date().getTime(), photoUrl);
                 DatabaseReference newChatRef = userChatsList.push();
                 newChat.setId(newChatRef.getKey());
                 newChatRef.setValue(newChat);

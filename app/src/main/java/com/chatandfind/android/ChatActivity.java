@@ -149,6 +149,7 @@ public class ChatActivity extends AppCompatActivity {
                             DatabaseReference userList = databaseReference.child(Config.CHAT_LIST).child(user_email);
                             databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessage").setValue(text);
                             databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessageTime").setValue(time);
+                            databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("photoUrl").setValue(mFirebaseUser.getPhotoUrl().toString());
                         }
                     }
 
@@ -291,7 +292,7 @@ public class ChatActivity extends AppCompatActivity {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                            Chat newChat = new Chat((String) map.get("title"), (String) map.get("lastMessage"), (Long) map.get("lastMessageTime"));
+                            Chat newChat = new Chat((String) map.get("title"), (String) map.get("lastMessage"), (Long) map.get("lastMessageTime"), (String) map.get("photoUrl"));
                             newChat.setId(chatId);
                             FirebaseDatabase.getInstance().getReference().child(Config.CHAT_LIST).child(new_email).child(chatId).setValue(newChat);
                         }
