@@ -15,6 +15,7 @@ import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
@@ -47,7 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCallback{
     private static final String TAG = "GoogleMapsActivity";
 
     private GoogleMap mMap;
