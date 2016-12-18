@@ -1,8 +1,8 @@
 package com.chatandfind.android;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.model.LatLng;
 
-import android.*;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -12,7 +12,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -22,20 +21,16 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.chatandfind.android.config.Config;
+
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
-import android.util.Log;
 
 import com.chatandfind.android.DirectionsLoader.DirectionsLoader;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -46,7 +41,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.concurrent.ExecutionException;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
@@ -60,24 +54,24 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     private FirebaseUser mFirebaseUser;
     private DatabaseReference databaseReference;
     private DatabaseReference userReference;
-    private DatabaseReference chatReference;
+    private DatabaseReference chatSettingsReference;
 
     private String chatId;
-    private String sortEmail;
+    private String encodedEmail;
     private Marker myLocationMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_google_maps);
 
         chatId = getIntent().getStringExtra(Config.CHAT_ID_TAG);
         mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        sortEmail = mFirebaseUser.getEmail();
-        sortEmail = sortEmail.substring(0, sortEmail.length() - 4);
+        encodedEmail = Config.encodeForFirebaseKey(Config.makeShortEmail(mFirebaseUser.getEmail()));
         databaseReference = FirebaseDatabase.getInstance().getReference();
-        userReference = databaseReference.child(Config.USERS).child(sortEmail);
-        chatReference = databaseReference.child(Config.CHATS_SETTINGS).child("users");
+        userReference = databaseReference.child(Config.USERS).child(encodedEmail);
+        chatSettingsReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId).child("users");
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -105,14 +99,30 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
             Log.d(TAG, "don't have location permission");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Config.MY_LOCATION_REQUEST_CODE);
         }
+
         mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
             @Override
             public boolean onMyLocationButtonClick() {
-                createOrUpdateUserMarker();
+                if (myLocationMarker != null) {
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationMarker.getPosition()));
+                    mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+                }
                 return false;
             }
         });
-        createOrUpdateUserMarker();
+
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng latLng) {
+                Log.d(TAG, "setOnMapLongClickListener");
+                if (myLocationMarker != null) {
+                    Log.d(TAG, "setOnMapLongClickListener");
+                    LatLng myPos = myLocationMarker.getPosition();
+                    showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
+                }
+            }
+        });
+        addAllUsersMarkers();
     }
 
     @Override
@@ -127,77 +137,50 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         }
     }
 
-    private void createOrUpdateUserMarker() {
-        if (myLocationMarker == null) {
-            if (userReference.child("latitude") != null && userReference.child("longitude") != null) {
-                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        double latitude = (double) dataSnapshot.child("latitude").getValue();
-                        double longitude = (double) dataSnapshot.child("longitude").getValue();
-                        LatLng latLng = new LatLng(latitude, longitude);
-                        myLocationMarker = mMap.addMarker(new MarkerOptions()
-                                .position(latLng)
-                                .title("Ваша позиция"));
-                        if (userReference.child("photoUrl") != null) {
-                            Log.d(TAG, "photo icon");
-                            final String photoUrl = (String) dataSnapshot.child("photoUrl").getValue();
-                            new AsyncTask<Void, Void, Void>() {
-                                Bitmap bitmap;
+    private void addAllUsersMarkers() {
+        chatSettingsReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d(TAG, "addAllUsersMarkers : " + dataSnapshot.getChildrenCount() + " " + dataSnapshot.getKey());
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    String childEncEmail = child.getKey();
+                    Log.d("addAllUsersMarkers", child.getKey());
+                    databaseReference.child(Config.USERS).child(childEncEmail).addValueEventListener(new ValueEventListener() {
+                        private Marker marker;
 
-                                @Override
-                                protected Void doInBackground(Void... voids) {
-                                    try {
-                                        bitmap = Glide.with(GoogleMapsActivity.this).load(photoUrl).asBitmap().into(-1, -1).get();
-                                        bitmap = getCircularBitmap(bitmap);
-                                        myLocationMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
-                                        Log.d(TAG, "photo icon end");
-                                    } catch (Exception e) {
-                                        Log.e(TAG, e.toString());
-                                    }
-                                    return null;
-                                }
-
-                                @Override
-                                protected void onPostExecute(Void aVoid) {
-                                    if (bitmap != null) {
-                                        myLocationMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (marker == null) {
+                                if (dataSnapshot.hasChild("longitude") && dataSnapshot.hasChild("latitude")) {
+                                    marker = mMap.addMarker(new MarkerOptions()
+                                            .title((String) dataSnapshot.child("displayName").getValue())
+                                            .position(new LatLng((double) dataSnapshot.child("latitude").getValue(), (double) dataSnapshot.child("longitude").getValue())));
+                                    if (dataSnapshot.hasChild("photoUrl")) {
+                                        downloadUserIcon(marker, (String) dataSnapshot.child("photoUrl").getValue());
                                     }
                                 }
-                            }.execute();
+                                if (dataSnapshot.getKey().equals(encodedEmail)) {
+                                    myLocationMarker = marker;
+                                }
+                            } else {
+                                marker.setPosition(new LatLng((double) dataSnapshot.child("latitude").getValue(), (double) dataSnapshot.child("longitude").getValue()));
+                            }
                         }
-                        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                        mMap.moveCamera(CameraUpdateFactory.zoomTo(12));
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
-            } else {
-                Toast.makeText(GoogleMapsActivity.this, "There isn't any information about your position", Toast.LENGTH_SHORT).show();
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
+                    });
+                }
             }
-        } else {
-            userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    double latitude = (double) dataSnapshot.child("latitude").getValue();
-                    double longitude = (double) dataSnapshot.child("longitude").getValue();
-                    LatLng latLng = new LatLng(latitude, longitude);
-                    myLocationMarker.setPosition(latLng);
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                    mMap.moveCamera(CameraUpdateFactory.zoomTo(12));
-                }
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                }
-            });
-        }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
     }
 
-    private Bitmap getCircularBitmap(Bitmap bitmap)
-    {
+    private Bitmap getCircularBitmap(Bitmap bitmap) {
         Bitmap output;
 
         if (bitmap.getWidth() > bitmap.getHeight()) {
@@ -236,9 +219,9 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
 
     }
 
-    public void showDirection(Context context, double firstLat, double firstLong, double secondLat, double secondLong) {
+    private void showDirection(Context context, double firstLat, double firstLong, double secondLat, double secondLong) {
 
-        DirectionsLoader loader = new DirectionsLoader(context,firstLat, firstLong, secondLat, secondLong);
+        DirectionsLoader loader = new DirectionsLoader(context, firstLat, firstLong, secondLat, secondLong);
 
         List<List<HashMap<String, String>>> result = loader.loadInBackground();
 
@@ -269,19 +252,41 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
             lineOptions.width(10);
             lineOptions.color(Color.RED);
 
-            Log.d("onPostExecute","onPostExecute lineoptions decoded");
+            Log.d("onPostExecute", "onPostExecute lineoptions decoded");
 
         }
 
         // Drawing polyline in the Google Map for the i-th route
-        if(lineOptions != null) {
+        if (lineOptions != null) {
             mMap.addPolyline(lineOptions);
-        }
-        else {
-            Log.d("showDirection","without Polylines drawn");
+        } else {
+            Log.d("showDirection", "without Polylines drawn");
         }
     }
 
+    private void downloadUserIcon(final Marker marker, final String photoUrl) {
+        new AsyncTask<Void, Void, Void>() {
+            Bitmap bitmap;
 
+            @Override
+            protected Void doInBackground(Void... voids) {
+                try {
+                    bitmap = Glide.with(GoogleMapsActivity.this).load(photoUrl).asBitmap().into(-1, -1).get();
+                    bitmap = getCircularBitmap(bitmap);
+                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                } catch (Exception e) {
+                    Log.e(TAG, "downloadUserIcon finished with error:\n" + e.toString());
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                if (bitmap != null) {
+                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                }
+            }
+        }.execute();
+    }
 
 }

@@ -19,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
 import com.chatandfind.android.config.Config;
 import com.chatandfind.android.databaseObjects.Chat;
 import com.chatandfind.android.databaseObjects.Message;
@@ -63,6 +64,7 @@ public class ChatActivity extends AppCompatActivity {
     private EditText editText;
     private String encodedEmail;
     private Toolbar toolbar;
+    private RequestManager glide;
 
     //Firebase variables
     private FirebaseAuth mFirebaseAuth;
@@ -78,6 +80,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        this.glide = Glide.with(this);
         Intent intent = getIntent();
         chatId = (String) intent.getCharSequenceExtra(Config.CHAT_ID_TAG);
 
@@ -161,7 +164,7 @@ public class ChatActivity extends AppCompatActivity {
                 viewHolder.messageTextView.setText(model.getText());
                 viewHolder.senderTextView.setText(model.getName());
                 if (model.getPhotoUrl() != null) {
-                    Glide.with(ChatActivity.this).load(model.getPhotoUrl()).into(viewHolder.senderImegeView);
+                    glide.load(model.getPhotoUrl()).into(viewHolder.senderImegeView);
                 }
             }
         };
@@ -197,7 +200,9 @@ public class ChatActivity extends AppCompatActivity {
         chatDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
+                if (dataSnapshot.exists()) {
+                    recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
+                }
             }
 
             @Override
@@ -251,6 +256,12 @@ public class ChatActivity extends AppCompatActivity {
                 finish();
         }
         return true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
     }
 
     @Override

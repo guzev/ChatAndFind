@@ -64,37 +64,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private LocationListener locationListener = new LocationListener() {
-        private static final String TAG = "locationListener";
-
-        @Override
-        public void onLocationChanged(Location location) {
-            Log.d(TAG, location.getProvider() + " long: " + location.getLongitude() + " lat: " + location.getLatitude());
-            databaseReference.child(Config.USERS).child(encodedEmail).child("latitude").setValue(location.getLatitude());
-            databaseReference.child(Config.USERS).child(encodedEmail).child("longitude").setValue(location.getLongitude());
-        }
-
-        @Override
-        public void onStatusChanged(String s, int i, Bundle bundle) {
-            Log.d(TAG, "s  -> " + String.valueOf(i));
-            if (s.equals(LocationManager.GPS_PROVIDER)) {
-                Log.d(TAG, "GPS status: " + String.valueOf(i));
-            } else if (s.equals(LocationManager.NETWORK_PROVIDER)) {
-                Log.d(TAG, "Network status: " + String.valueOf(i));
-            }
-        }
-
-        @Override
-        public void onProviderEnabled(String s) {
-            Log.d(TAG, "onProviderEnabled: " + s);
-        }
-
-        @Override
-        public void onProviderDisabled(String s) {
-            Log.d(TAG, "onProviderDisabled: " + s);
-        }
-    };
-
     //Firebase variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
@@ -113,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
     private String photoUrl;
 
     private Toolbar toolbar;
-    private LocationManager locationManager;
+
 
 
     @Override
@@ -192,11 +161,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
 
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-        Log.d(TAG, "GPS: " + locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) + " Network: " + locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
-
-        Intent serviceIntent = new Intent(this, MessegesService.class);
+        Intent serviceIntent = new Intent(this, MessagesService.class);
         serviceIntent.putExtra(Config.ENC_EMAIL_TAG, encodedEmail);
         startService(serviceIntent);
     }
@@ -233,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
+        stopService(new Intent(this, UpdatingLocationService.class));
     }
 
     @Override
@@ -243,18 +209,14 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "don't have location permission");
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, Config.MY_LOCATION_REQUEST_CODE);
         }
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5 * 1000, 10, locationListener);
-        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5 * 1000, 10, locationListener);
+        Intent locationIntent = new Intent(this, UpdatingLocationService.class);
+        locationIntent.putExtra(Config.ENC_EMAIL_TAG, encodedEmail);
+        startService(locationIntent);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "don't have location permission");
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, Config.MY_LOCATION_REQUEST_CODE);
-        }
-        locationManager.removeUpdates(locationListener);
     }
 }

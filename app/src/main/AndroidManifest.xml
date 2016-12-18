@@ -56,9 +56,14 @@
             android:label="@string/title_activity_google_maps" />
 
         <service
-            android:name=".MessegesService"
+            android:name=".MessagesService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"/>
+
+        <service
+            android:name=".UpdatingLocationService"
+            android:enabled="true"
+            android:exported="true"/>
     </application>
 
 
