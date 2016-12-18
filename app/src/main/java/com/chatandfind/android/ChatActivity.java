@@ -143,6 +143,7 @@ public class ChatActivity extends AppCompatActivity {
                         long time = message.getTime();
                         for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                             String user_email = userSnapshot.getKey();
+                            DatabaseReference userList = databaseReference.child(Config.CHAT_LIST).child(user_email);
                             databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessage").setValue(text);
                             databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessageTime").setValue(time);
                         }
@@ -260,8 +261,8 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         Log.d(TAG, "onDestroy");
+        super.onDestroy();
     }
 
     @Override

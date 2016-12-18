@@ -19,6 +19,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -44,6 +45,7 @@ public class UpdatingLocationService extends Service implements GoogleApiClient.
                     .addApi(LocationServices.API)
                     .build();
         }
+        encodedEmail = Config.encodeForFirebaseKey(FirebaseAuth.getInstance().getCurrentUser().getEmail());
         mGoogleApiClient.connect();
     }
 
@@ -60,9 +62,6 @@ public class UpdatingLocationService extends Service implements GoogleApiClient.
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand");
-        if (intent != null) {
-            encodedEmail = intent.getStringExtra(Config.ENC_EMAIL_TAG);
-        }
         return super.onStartCommand(intent, flags, startId);
     }
 

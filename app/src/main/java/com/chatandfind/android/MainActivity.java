@@ -31,6 +31,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
@@ -121,7 +122,8 @@ public class MainActivity extends AppCompatActivity {
 
         userChatsList = databaseReference.child(Config.CHAT_LIST).child(encodedEmail);
         chatsSettingReference = databaseReference.child(Config.CHATS_SETTINGS);
-        recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, userChatsList) {
+        Query query = userChatsList.orderByChild("lastMessageTime");
+        recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, query) {
             @Override
             protected void populateViewHolder(ChatViewHolder viewHolder, Chat model, int position) {
                 progressBar.setVisibility(View.INVISIBLE);
@@ -158,6 +160,8 @@ public class MainActivity extends AppCompatActivity {
 
         userChatsList.addValueEventListener(chatsListener);
         layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true);
+        layoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
 
@@ -178,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.main_menu_sign_out:
                 mFirebaseAuth.signOut();
-                startActivity(new Intent(this, SignInActivity.class));
+                startActivity(new Intent(this, SignInActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                 return true;
             case R.id.main_menu_add_chat:
                 Chat newChat = new Chat(Config.DEFAULT_CHAT_NAME, "нет сообщений", new Date().getTime());
