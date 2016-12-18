@@ -1,5 +1,7 @@
 package com.chatandfind.android.config;
 
+import java.text.SimpleDateFormat;
+
 /**
  * Created by Vlad on 11.12.2016.
  */
@@ -16,6 +18,8 @@ public class Config {
     public static final String ENC_EMAIL_TAG = "enc_email";
 
     public static final int MY_LOCATION_REQUEST_CODE = 1;
+
+    public static final SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static String encodeForFirebaseKey(String s) {
         return s

@@ -32,6 +32,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Date;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -45,13 +46,15 @@ public class ChatActivity extends AppCompatActivity {
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         public TextView messageTextView;
         public TextView senderTextView;
-        public CircleImageView senderImegeView;
+        public CircleImageView senderImageView;
+        public TextView messageTimeTextView;
 
         public MessageViewHolder(View itemView) {
             super(itemView);
             messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
             senderTextView = (TextView) itemView.findViewById(R.id.senderTextView);
-            senderImegeView = (CircleImageView) itemView.findViewById(R.id.senderImageView);
+            senderImageView = (CircleImageView) itemView.findViewById(R.id.senderImageView);
+            messageTimeTextView = (TextView) itemView.findViewById(R.id.messageTimeTextView);
         }
     }
 
@@ -164,8 +167,9 @@ public class ChatActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.INVISIBLE);
                 viewHolder.messageTextView.setText(model.getText());
                 viewHolder.senderTextView.setText(model.getName());
+                viewHolder.messageTimeTextView.setText(Config.sdfDate.format(new Date(model.getTime())));
                 if (model.getPhotoUrl() != null) {
-                    glide.load(model.getPhotoUrl()).into(viewHolder.senderImegeView);
+                    glide.load(model.getPhotoUrl()).into(viewHolder.senderImageView);
                 }
             }
         };
