@@ -131,7 +131,7 @@ public class ChatActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Message message = new Message(editText.getText().toString(), mFirebaseUser.getDisplayName(), null, System.currentTimeMillis());
+                final Message message = new Message(editText.getText().toString().trim(), mFirebaseUser.getDisplayName(), null, System.currentTimeMillis());
                 if (mFirebaseUser.getPhotoUrl() != null) {
                     message.setPhotoUrl(mFirebaseUser.getPhotoUrl().toString());
                 }
