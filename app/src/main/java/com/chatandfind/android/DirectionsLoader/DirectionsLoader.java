@@ -1,9 +1,10 @@
 package com.chatandfind.android.DirectionsLoader;
 
-import android.content.AsyncTaskLoader;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
 
 import com.chatandfind.android.DirectionsAPI.DirectionsAPI;
@@ -39,6 +40,11 @@ public class DirectionsLoader extends AsyncTaskLoader<List<List<HashMap<String, 
     }
 
     @Override
+    protected void onStartLoading() {
+        forceLoad();
+    }
+
+    @Override
     public List<List<HashMap<String, String>>> loadInBackground() {
         HttpURLConnection connection = null;
         List<List<HashMap<String, String>>> result = null;
@@ -53,9 +59,12 @@ public class DirectionsLoader extends AsyncTaskLoader<List<List<HashMap<String, 
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 Log.d(TAG, "HTTP_OK");
+
                 in = connection.getInputStream();
 
                 result = DOMParser.parseDirection(in);
+
+                Log.d("result size is ", result.size() + "");
 
                 ArrayList<LatLng> points;
                 PolylineOptions lineOptions = null;
