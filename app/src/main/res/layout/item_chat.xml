@@ -17,7 +17,8 @@
             android:layout_weight="0.1"
             android:maxLines="1"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            />
 
         <TextView
             android:id="@+id/lastTime"
