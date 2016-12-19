@@ -109,8 +109,8 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
             @Override
             public boolean onMyLocationButtonClick() {
                 if (myLocationMarker != null) {
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationMarker.getPosition()));
                     mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationMarker.getPosition()));
                 }
                 return false;
             }
