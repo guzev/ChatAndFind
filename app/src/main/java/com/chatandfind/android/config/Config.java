@@ -19,7 +19,7 @@ public class Config {
 
     public static final int MY_LOCATION_REQUEST_CODE = 1;
 
-    public static final SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final SimpleDateFormat sdfDate = new SimpleDateFormat("yy.MM.dd HH:mm");
 
     public static String encodeForFirebaseKey(String s) {
         return s
