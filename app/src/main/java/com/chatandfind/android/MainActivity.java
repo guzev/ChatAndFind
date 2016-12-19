@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +22,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.bumptech.glide.Glide;
@@ -92,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
     private String displayName;
     private String photoUrl;
     private RequestManager glide;
+    private boolean singInFinish;
+    private boolean hasLocationPermission;
 
     private Toolbar toolbar;
 
@@ -117,9 +121,11 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         if (mFirebaseUser == null) {
             startActivity(new Intent(this, SignInActivity.class));
+            singInFinish = true;
             finish();
             return;
         } else {
+            singInFinish = false;
             encodedEmail = Config.encodeForFirebaseKey(mFirebaseUser.getEmail());
             displayName = mFirebaseUser.getDisplayName();
             databaseReference.child(Config.USERS).child(encodedEmail).child("displayName").setValue(displayName);
@@ -186,6 +192,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == Config.MY_LOCATION_REQUEST_CODE) {
+            if (permissions.length == 1 && permissions[0].equals(android.Manifest.permission.ACCESS_FINE_LOCATION) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startService(new Intent(this, UpdatingLocationService.class));
+            } else {
+                // Permission was denied. Display an error message.
+                Toast.makeText(this, "location permission was denied", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
@@ -219,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
         stopService(new Intent(this, UpdatingLocationService.class));
-        userChatsList.removeEventListener(chatsListener);
+        if (!singInFinish) userChatsList.removeEventListener(chatsListener);
     }
 
     @Override
@@ -230,9 +248,6 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "don't have location permission");
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, Config.MY_LOCATION_REQUEST_CODE);
         }
-        Intent locationIntent = new Intent(this, UpdatingLocationService.class);
-        locationIntent.putExtra(Config.ENC_EMAIL_TAG, encodedEmail);
-        startService(locationIntent);
     }
 
     @Override
