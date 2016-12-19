@@ -92,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -178,6 +177,19 @@ public class MainActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, MessagesService.class);
         serviceIntent.putExtra(Config.ENC_EMAIL_TAG, encodedEmail);
         startService(serviceIntent);
+
+        userChatsList.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
     }
 
     @Override
