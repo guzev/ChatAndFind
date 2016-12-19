@@ -38,6 +38,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,8 +48,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCallback, LoaderManager.LoaderCallbacks<List<List<HashMap<String, String>>>> {
     private static final String TAG = "GoogleMapsActivity";
@@ -58,12 +61,13 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     private DatabaseReference databaseReference;
     private DatabaseReference userReference;
     private DatabaseReference chatSettingsReference;
+    private ChildEventListener chatSettingsListener;
 
     private String chatId;
     private String encodedEmail;
     private Marker myLocationMarker;
     private double friendLat, friendLng;
-    private Context context;
+    private HashMap<String, ValueEventListener> listenersMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +81,35 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         databaseReference = FirebaseDatabase.getInstance().getReference();
         userReference = databaseReference.child(Config.USERS).child(encodedEmail);
         chatSettingsReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId).child("users");
+        listenersMap = new HashMap<>();
+        chatSettingsListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+
+            public void removeListeners() {
+
+            }
+        };
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -84,6 +117,13 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         mapFragment.getMapAsync(this);
     }
 
+    @Override
+    protected void onDestroy() {
+        for (Map.Entry<String, ValueEventListener> entry : listenersMap.entrySet()) {
+            databaseReference.child(Config.USERS).child(entry.getKey()).removeEventListener(entry.getValue());
+        }
+        super.onDestroy();
+    }
 
     /**
      * Manipulates the map once available.
@@ -197,15 +237,15 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     }
 
     private void addAllUsersMarkers() {
-        chatSettingsReference.addValueEventListener(new ValueEventListener() {
+        chatSettingsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.d(TAG, "addAllUsersMarkers : " + dataSnapshot.getChildrenCount() + " " + dataSnapshot.getKey());
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
                     String childEncEmail = child.getKey();
                     Log.d("addAllUsersMarkers", child.getKey());
-                    databaseReference.child(Config.USERS).child(childEncEmail).addValueEventListener(new ValueEventListener() {
-                        private Marker marker;
+                    ValueEventListener valueEventListener = new ValueEventListener() {
+                        private Marker marker = null;
 
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -220,6 +260,10 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                                 }
                                 if (dataSnapshot.getKey().equals(encodedEmail)) {
                                     myLocationMarker = marker;
+                                    if (myLocationMarker != null) {
+                                        mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+                                        mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationMarker.getPosition()));
+                                    }
                                 }
                             } else {
                                 marker.setPosition(new LatLng((double) dataSnapshot.child("latitude").getValue(), (double) dataSnapshot.child("longitude").getValue()));
@@ -229,7 +273,9 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
                         }
-                    });
+                    };
+                    listenersMap.put(childEncEmail, valueEventListener);
+                    databaseReference.child(Config.USERS).child(childEncEmail).addValueEventListener(valueEventListener);
                 }
             }
 
