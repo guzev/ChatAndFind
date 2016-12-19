@@ -36,7 +36,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="20dp"
-        android:textColor="@color/colorAccent"
+        android:textColor="@color/black"
         android:visibility="invisible"
         android:text="@string/no_chats"
         android:layout_below="@+id/activity_main_progressBar"

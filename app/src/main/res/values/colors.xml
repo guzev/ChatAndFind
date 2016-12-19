@@ -7,4 +7,5 @@
     <color name="orange">#FF8000</color>
     <color name="green">#00FF00</color>
     <color name="blue">#000099</color>
+    <color name="black">#000000</color>
 </resources>
