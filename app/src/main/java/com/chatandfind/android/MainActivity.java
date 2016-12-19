@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         public TextView lastMessage;
         public TextView lastMessageTime;
         public CircleImageView senderImageView;
+        public ImageView newMessageIcon;
 
         public ChatViewHolder(View itemView) {
             super(itemView);
@@ -58,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
             lastMessage = (TextView) itemView.findViewById(R.id.lastMessage);
             lastMessageTime = (TextView) itemView.findViewById(R.id.lastTime);
             senderImageView = (CircleImageView) itemView.findViewById(R.id.senderImageView);
+            newMessageIcon = (ImageView) itemView.findViewById(R.id.newMessageIcon);
             itemView.setOnClickListener(this);
         }
 
@@ -78,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference userChatsList;
     private DatabaseReference chatsSettingReference;
     private FirebaseRecyclerAdapter<Chat, MainActivity.ChatViewHolder> recyclerAdapter;
+    private ValueEventListener chatsListener;
 
 
     private ProgressBar progressBar;
@@ -127,6 +131,28 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        chatsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d(TAG, "chatsListener: onDataChange");
+                if (!dataSnapshot.exists()) {
+                    statusText.setVisibility(View.VISIBLE);
+                    recyclerView.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.INVISIBLE);
+                } else {
+                    recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
+                    statusText.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.INVISIBLE);
+                    recyclerView.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, "chatsListener: onCancelled");
+            }
+        };
+
         userChatsList = databaseReference.child(Config.CHAT_LIST).child(encodedEmail);
         chatsSettingReference = databaseReference.child(Config.CHATS_SETTINGS);
         Query query = userChatsList.orderByChild("lastMessageTime");
@@ -141,31 +167,10 @@ public class MainActivity extends AppCompatActivity {
                 if (model.getPhotoUrl() != null) {
                     glide.load(model.getPhotoUrl()).into(viewHolder.senderImageView);
                 }
+                viewHolder.newMessageIcon.setVisibility(model.getLastMessageTime() != model.getLastSeenMessageTime() ? View.VISIBLE : View.INVISIBLE);
                 viewHolder.id = model.getId();
             }
         };
-
-        ValueEventListener chatsListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "chatsListener: onDataChange");
-                if (!dataSnapshot.exists()) {
-                    statusText.setVisibility(View.VISIBLE);
-                    recyclerView.setVisibility(View.INVISIBLE);
-                    progressBar.setVisibility(View.INVISIBLE);
-                } else {
-                    statusText.setVisibility(View.INVISIBLE);
-                    progressBar.setVisibility(View.INVISIBLE);
-                    recyclerView.setVisibility(View.VISIBLE);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, "chatsListener: onCancelled");
-            }
-        };
-
 
         userChatsList.addValueEventListener(chatsListener);
         layoutManager = new LinearLayoutManager(this);
@@ -178,18 +183,6 @@ public class MainActivity extends AppCompatActivity {
         serviceIntent.putExtra(Config.ENC_EMAIL_TAG, encodedEmail);
         startService(serviceIntent);
 
-        userChatsList.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
     }
 
     @Override
@@ -207,7 +200,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, SignInActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                 return true;
             case R.id.main_menu_add_chat:
-                Chat newChat = new Chat(Config.DEFAULT_CHAT_NAME, "нет сообщений", new Date().getTime(), photoUrl);
+                long currentTime = System.currentTimeMillis();
+                Chat newChat = new Chat(Config.DEFAULT_CHAT_NAME, "нет сообщений", currentTime, currentTime, photoUrl);
                 DatabaseReference newChatRef = userChatsList.push();
                 newChat.setId(newChatRef.getKey());
                 newChatRef.setValue(newChat);
@@ -225,6 +219,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
         stopService(new Intent(this, UpdatingLocationService.class));
+        userChatsList.removeEventListener(chatsListener);
     }
 
     @Override

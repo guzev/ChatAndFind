@@ -9,14 +9,16 @@ public class Chat {
     private String title;
     private String lastMessage;
     private long lastMessageTime;
+    private long lastSeenMessageTime;
     private String photoUrl;
 
     public Chat() {}
 
-    public Chat(String title, String lastMessage, long lastMessageTime, String photoUrl) {
+    public Chat(String title, String lastMessage, long lastMessageTime, long lastSeenMessageTime, String photoUrl) {
         this.title = title;
         this.lastMessage = lastMessage;
         this.lastMessageTime = lastMessageTime;
+        this.lastSeenMessageTime = lastSeenMessageTime;
         this.photoUrl = photoUrl;
     }
 
@@ -58,5 +60,13 @@ public class Chat {
 
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public long getLastSeenMessageTime() {
+        return lastSeenMessageTime;
+    }
+
+    public void setLastSeenMessageTime(long lastSeenMessageTime) {
+        this.lastSeenMessageTime = lastSeenMessageTime;
     }
 }

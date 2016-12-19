@@ -75,7 +75,11 @@ public class ChatActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
     private DatabaseReference chatDatabaseReference;
     private DatabaseReference settingsDatabaseReference;
+    private DatabaseReference userChatListReference;
     private FirebaseRecyclerAdapter<Message, ChatActivity.MessageViewHolder> recyclerAdapter;
+    private ValueEventListener messagesListener;
+    private ValueEventListener newMessageTimeListener;
+    private ValueEventListener chatTitleListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -101,7 +105,39 @@ public class ChatActivity extends AppCompatActivity {
         databaseReference = FirebaseDatabase.getInstance().getReference();
         chatDatabaseReference = databaseReference.child(Config.CHATS).child(chatId);
         settingsDatabaseReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId);
-        settingsDatabaseReference.child("title").addValueEventListener(new ValueEventListener() {
+        userChatListReference = databaseReference.child(Config.CHAT_LIST).child(encodedEmail).child(chatId);
+
+        messagesListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d(TAG, "messagesListener: onDataChange");
+                if (!dataSnapshot.exists()) {
+                    statusText.setVisibility(View.VISIBLE);
+                    recyclerView.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.INVISIBLE);
+                } else {
+                    statusText.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.INVISIBLE);
+                    recyclerView.setVisibility(View.VISIBLE);
+                    recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, "messagesListener: onCancelled");
+            }
+        };
+        newMessageTimeListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                userChatListReference.child("lastSeenMessageTime").setValue(dataSnapshot.child("lastMessageTime").getValue());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        };
+        chatTitleListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 getSupportActionBar().setTitle((String) dataSnapshot.getValue());
@@ -110,11 +146,12 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
-        });
+        };
+
+        settingsDatabaseReference.child("title").addValueEventListener(chatTitleListener);
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
             @Override
@@ -128,7 +165,6 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-
             }
         });
         sendButton.setOnClickListener(new View.OnClickListener() {
@@ -146,10 +182,10 @@ public class ChatActivity extends AppCompatActivity {
                         long time = message.getTime();
                         for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                             String user_email = userSnapshot.getKey();
-                            DatabaseReference userList = databaseReference.child(Config.CHAT_LIST).child(user_email);
-                            databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessage").setValue(text);
-                            databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessageTime").setValue(time);
-                            databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("photoUrl").setValue(mFirebaseUser.getPhotoUrl().toString());
+                            DatabaseReference userList = databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId);
+                            userList.child("lastMessage").setValue(text);
+                            userList.child("lastMessageTime").setValue(time);
+                            userList.child("photoUrl").setValue(mFirebaseUser.getPhotoUrl().toString());
                         }
                     }
 
@@ -175,45 +211,13 @@ public class ChatActivity extends AppCompatActivity {
             }
         };
 
-        ValueEventListener messagesListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "messagesListener: onDataChange");
-                if (!dataSnapshot.exists()) {
-                    statusText.setVisibility(View.VISIBLE);
-                    recyclerView.setVisibility(View.INVISIBLE);
-                    progressBar.setVisibility(View.INVISIBLE);
-                } else {
-                    statusText.setVisibility(View.INVISIBLE);
-                    progressBar.setVisibility(View.INVISIBLE);
-                    recyclerView.setVisibility(View.VISIBLE);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, "messagesListener: onCancelled");
-            }
-        };
-
-
         chatDatabaseReference.addValueEventListener(messagesListener);
         layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
 
-        chatDatabaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        });
+        userChatListReference.addValueEventListener(newMessageTimeListener);
     }
 
     @Override
@@ -247,7 +251,7 @@ public class ChatActivity extends AppCompatActivity {
             case R.id.exit_chat:
                 settingsDatabaseReference.child("users").child(encodedEmail).setValue(null);
                 databaseReference.child(Config.CHAT_LIST).child(encodedEmail).child(chatId).setValue(null);
-                settingsDatabaseReference.child("users").addValueEventListener(new ValueEventListener() {
+                settingsDatabaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (!dataSnapshot.exists()) {
@@ -257,7 +261,8 @@ public class ChatActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {}
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
                 });
                 finish();
         }
@@ -266,8 +271,11 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        Log.d(TAG, "onDestroy");
         super.onDestroy();
+        Log.d(TAG, "onDestroy");
+        settingsDatabaseReference.child("title").removeEventListener(chatTitleListener);
+        chatDatabaseReference.removeEventListener(messagesListener);
+        userChatListReference.removeEventListener(newMessageTimeListener);
     }
 
     @Override
@@ -292,7 +300,7 @@ public class ChatActivity extends AppCompatActivity {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                            Chat newChat = new Chat((String) map.get("title"), (String) map.get("lastMessage"), (Long) map.get("lastMessageTime"), (String) map.get("photoUrl"));
+                            Chat newChat = new Chat((String) map.get("title"), (String) map.get("lastMessage"), (Long) map.get("lastMessageTime"), 0, (String) map.get("photoUrl"));
                             newChat.setId(chatId);
                             FirebaseDatabase.getInstance().getReference().child(Config.CHAT_LIST).child(new_email).child(chatId).setValue(newChat);
                         }
