@@ -149,7 +149,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
             @Override
             public boolean onMyLocationButtonClick() {
                 if (myLocationMarker != null) {
-                    mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+                    mMap.moveCamera(CameraUpdateFactory.zoomTo(14));
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationMarker.getPosition()));
                 }
                 return false;
@@ -261,7 +261,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                                 if (dataSnapshot.getKey().equals(encodedEmail)) {
                                     myLocationMarker = marker;
                                     if (myLocationMarker != null) {
-                                        mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+                                        mMap.moveCamera(CameraUpdateFactory.zoomTo(10));
                                         mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationMarker.getPosition()));
                                     }
                                 }
