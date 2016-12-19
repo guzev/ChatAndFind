@@ -35,7 +35,7 @@
         <Button
             android:id="@+id/activity_chat_send_button"
             android:layout_width="60dp"
-            android:layout_height="50dp"
+            android:layout_height="40dp"
             android:layout_gravity="bottom"
             android:background="@drawable/button"
             android:enabled="false" />

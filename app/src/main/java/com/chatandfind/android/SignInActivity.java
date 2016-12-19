@@ -108,7 +108,6 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
                             Log.w(TAG, "signInWithCredential", task.getException());
                             Toast.makeText(SignInActivity.this, "Authentication failed.", Toast.LENGTH_LONG).show();
                         }
-                        Toast.makeText(SignInActivity.this, "Authentication successfully finished!", Toast.LENGTH_LONG).show();
                         startActivity(new Intent(SignInActivity.this, MainActivity.class));
                         finish();
                     }

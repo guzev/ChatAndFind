@@ -32,6 +32,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Date;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -45,13 +46,15 @@ public class ChatActivity extends AppCompatActivity {
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         public TextView messageTextView;
         public TextView senderTextView;
-        public CircleImageView senderImegeView;
+        public CircleImageView senderImageView;
+        public TextView messageTimeTextView;
 
         public MessageViewHolder(View itemView) {
             super(itemView);
             messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
             senderTextView = (TextView) itemView.findViewById(R.id.senderTextView);
-            senderImegeView = (CircleImageView) itemView.findViewById(R.id.senderImageView);
+            senderImageView = (CircleImageView) itemView.findViewById(R.id.senderImageView);
+            messageTimeTextView = (TextView) itemView.findViewById(R.id.messageTimeTextView);
         }
     }
 
@@ -131,7 +134,7 @@ public class ChatActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Message message = new Message(editText.getText().toString(), mFirebaseUser.getDisplayName(), null, System.currentTimeMillis());
+                final Message message = new Message(editText.getText().toString().trim(), mFirebaseUser.getDisplayName(), null, System.currentTimeMillis());
                 if (mFirebaseUser.getPhotoUrl() != null) {
                     message.setPhotoUrl(mFirebaseUser.getPhotoUrl().toString());
                 }
@@ -143,8 +146,10 @@ public class ChatActivity extends AppCompatActivity {
                         long time = message.getTime();
                         for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                             String user_email = userSnapshot.getKey();
+                            DatabaseReference userList = databaseReference.child(Config.CHAT_LIST).child(user_email);
                             databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessage").setValue(text);
                             databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("lastMessageTime").setValue(time);
+                            databaseReference.child(Config.CHAT_LIST).child(user_email).child(chatId).child("photoUrl").setValue(mFirebaseUser.getPhotoUrl().toString());
                         }
                     }
 
@@ -163,8 +168,9 @@ public class ChatActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.INVISIBLE);
                 viewHolder.messageTextView.setText(model.getText());
                 viewHolder.senderTextView.setText(model.getName());
+                viewHolder.messageTimeTextView.setText(Config.sdfDate.format(new Date(model.getTime())));
                 if (model.getPhotoUrl() != null) {
-                    glide.load(model.getPhotoUrl()).into(viewHolder.senderImegeView);
+                    glide.load(model.getPhotoUrl()).into(viewHolder.senderImageView);
                 }
             }
         };
@@ -260,8 +266,8 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         Log.d(TAG, "onDestroy");
+        super.onDestroy();
     }
 
     @Override
@@ -286,7 +292,7 @@ public class ChatActivity extends AppCompatActivity {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                            Chat newChat = new Chat((String) map.get("title"), (String) map.get("lastMessage"), (Long) map.get("lastMessageTime"));
+                            Chat newChat = new Chat((String) map.get("title"), (String) map.get("lastMessage"), (Long) map.get("lastMessageTime"), (String) map.get("photoUrl"));
                             newChat.setId(chatId);
                             FirebaseDatabase.getInstance().getReference().child(Config.CHAT_LIST).child(new_email).child(chatId).setValue(newChat);
                         }

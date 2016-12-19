@@ -22,6 +22,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
 import com.chatandfind.android.config.Config;
 import com.chatandfind.android.databaseObjects.Chat;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -31,10 +33,13 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -45,12 +50,14 @@ public class MainActivity extends AppCompatActivity {
         public TextView title;
         public TextView lastMessage;
         public TextView lastMessageTime;
+        public CircleImageView senderImageView;
 
         public ChatViewHolder(View itemView) {
             super(itemView);
             title = (TextView) itemView.findViewById(R.id.chatName);
             lastMessage = (TextView) itemView.findViewById(R.id.lastMessage);
             lastMessageTime = (TextView) itemView.findViewById(R.id.lastTime);
+            senderImageView = (CircleImageView) itemView.findViewById(R.id.senderImageView);
             itemView.setOnClickListener(this);
         }
 
@@ -80,9 +87,9 @@ public class MainActivity extends AppCompatActivity {
     private String encodedEmail;
     private String displayName;
     private String photoUrl;
+    private RequestManager glide;
 
     private Toolbar toolbar;
-
 
 
     @Override
@@ -97,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.main_activity_list_of_chats);
         mContext = this;
+        glide = Glide.with(this);
 
         //initial database references
         databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -121,15 +129,18 @@ public class MainActivity extends AppCompatActivity {
 
         userChatsList = databaseReference.child(Config.CHAT_LIST).child(encodedEmail);
         chatsSettingReference = databaseReference.child(Config.CHATS_SETTINGS);
-        recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, userChatsList) {
+        Query query = userChatsList.orderByChild("lastMessageTime");
+        recyclerAdapter = new FirebaseRecyclerAdapter<Chat, ChatViewHolder>(Chat.class, R.layout.item_chat, MainActivity.ChatViewHolder.class, query) {
             @Override
             protected void populateViewHolder(ChatViewHolder viewHolder, Chat model, int position) {
                 progressBar.setVisibility(View.INVISIBLE);
                 viewHolder.title.setText(model.getTitle());
                 viewHolder.lastMessage.setText(model.getLastMessage());
-                SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String date = sdfDate.format(new Date(model.getLastMessageTime()));
+                String date = Config.sdfDate.format(new Date(model.getLastMessageTime()));
                 viewHolder.lastMessageTime.setText(date);
+                if (model.getPhotoUrl() != null) {
+                    glide.load(model.getPhotoUrl()).into(viewHolder.senderImageView);
+                }
                 viewHolder.id = model.getId();
             }
         };
@@ -158,12 +169,27 @@ public class MainActivity extends AppCompatActivity {
 
         userChatsList.addValueEventListener(chatsListener);
         layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true);
+        layoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
 
         Intent serviceIntent = new Intent(this, MessagesService.class);
         serviceIntent.putExtra(Config.ENC_EMAIL_TAG, encodedEmail);
         startService(serviceIntent);
+
+        userChatsList.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    recyclerView.smoothScrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
     }
 
     @Override
@@ -178,10 +204,10 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.main_menu_sign_out:
                 mFirebaseAuth.signOut();
-                startActivity(new Intent(this, SignInActivity.class));
+                startActivity(new Intent(this, SignInActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                 return true;
             case R.id.main_menu_add_chat:
-                Chat newChat = new Chat(Config.DEFAULT_CHAT_NAME, "нет сообщений", new Date().getTime());
+                Chat newChat = new Chat(Config.DEFAULT_CHAT_NAME, "нет сообщений", new Date().getTime(), photoUrl);
                 DatabaseReference newChatRef = userChatsList.push();
                 newChat.setId(newChatRef.getKey());
                 newChatRef.setValue(newChat);
