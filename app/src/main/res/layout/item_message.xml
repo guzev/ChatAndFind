@@ -34,7 +34,7 @@
                     android:id="@+id/senderTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.1"
+                    android:layout_weight="1"
                     android:gravity="left"
                     android:maxLines="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
@@ -44,8 +44,9 @@
                     android:id="@+id/messageTimeTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.1"
+                    android:layout_weight="2"
                     android:gravity="right"
+                    android:paddingRight="4dp"
                     android:maxLines="1" />
 
             </LinearLayout>
