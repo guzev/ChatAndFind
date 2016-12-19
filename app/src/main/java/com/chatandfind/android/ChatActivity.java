@@ -216,8 +216,6 @@ public class ChatActivity extends AppCompatActivity {
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(recyclerAdapter);
-
-        userChatListReference.addValueEventListener(newMessageTimeListener);
     }
 
     @Override
@@ -275,7 +273,6 @@ public class ChatActivity extends AppCompatActivity {
         Log.d(TAG, "onDestroy");
         settingsDatabaseReference.child("title").removeEventListener(chatTitleListener);
         chatDatabaseReference.removeEventListener(messagesListener);
-        userChatListReference.removeEventListener(newMessageTimeListener);
     }
 
     @Override
@@ -332,5 +329,17 @@ public class ChatActivity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    @Override
+    protected void onPause() {
+        userChatListReference.removeEventListener(newMessageTimeListener);
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        userChatListReference.addValueEventListener(newMessageTimeListener);
     }
 }
