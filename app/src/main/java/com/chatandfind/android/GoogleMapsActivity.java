@@ -17,6 +17,8 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
+
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -48,7 +50,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCallback{
+public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCallback, LoaderManager.LoaderCallbacks<List<List<HashMap<String, String>>>> {
     private static final String TAG = "GoogleMapsActivity";
 
     private GoogleMap mMap;
@@ -60,6 +62,8 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     private String chatId;
     private String encodedEmail;
     private Marker myLocationMarker;
+    private double friendLat, friendLng;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,12 +122,66 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                 Log.d(TAG, "setOnMapLongClickListener");
                 if (myLocationMarker != null) {
                     Log.d(TAG, "setOnMapLongClickListener");
-                    LatLng myPos = myLocationMarker.getPosition();
-                    showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
+                    //LatLng myPos = myLocationMarker.getPosition();
+                    friendLat = latLng.latitude;
+                    friendLng = latLng.longitude;
+                    //showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
+                    getSupportLoaderManager().initLoader(0, null, GoogleMapsActivity.this).forceLoad();
                 }
             }
         });
         addAllUsersMarkers();
+    }
+
+    @Override
+    public Loader<List<List<HashMap<String, String>>>> onCreateLoader(int id, Bundle args) {
+        LatLng myPos = myLocationMarker.getPosition();
+        return new DirectionsLoader( this, myPos.latitude, myPos.longitude, friendLat, friendLng);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<List<HashMap<String, String>>>> loader) {
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<List<HashMap<String, String>>>> loader, List<List<HashMap<String, String>>> result) {
+        ArrayList<LatLng> points;
+        PolylineOptions lineOptions = null;
+
+        // Traversing through all the routes
+        for (int i = 0; i < result.size(); i++) {
+            points = new ArrayList<>();
+            lineOptions = new PolylineOptions();
+
+            // Fetching i-th route
+            List<HashMap<String, String>> path = result.get(i);
+
+            // Fetching all the points in i-th route
+            for (int j = 0; j < path.size(); j++) {
+                HashMap<String, String> point = path.get(j);
+
+                double lat = Double.parseDouble(point.get("lat"));
+                double lng = Double.parseDouble(point.get("lng"));
+                LatLng position = new LatLng(lat, lng);
+
+                points.add(position);
+            }
+
+            // Adding all the points in the route to LineOptions
+            lineOptions.addAll(points);
+            lineOptions.width(10);
+            lineOptions.color(Color.RED);
+
+            Log.d("onPostExecute", "onPostExecute lineoptions decoded");
+
+        }
+
+        // Drawing polyline in the Google Map for the i-th route
+        if (lineOptions != null) {
+            mMap.addPolyline(lineOptions);
+        } else {
+            Log.d("showDirection", "without Polylines drawn");
+        }
     }
 
     @Override
@@ -219,6 +277,9 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
     }
+
+
+
 
     private void showDirection(Context context, double firstLat, double firstLong, double secondLat, double secondLong) {
 

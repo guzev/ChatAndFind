@@ -21,6 +21,8 @@ import java.util.List;
 
 public class DOMParser {
 
+    private final static String TAG = "DOMParser";
+
     public static List<List<HashMap<String, String>>> parseDirection(InputStream in) throws JSONException, IOException {
         ArrayList<List<HashMap<String, String>>> result = new ArrayList<>();
         String content = IOUtils.readToString(in, "UTF-8");
@@ -59,6 +61,8 @@ public class DOMParser {
                     result.add(path);
                 }
             }
+
+            Log.d(TAG, "Parsed the answer JSON");
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -100,6 +104,8 @@ public class DOMParser {
                     (((double) lng / 1E5)));
             poly.add(p);
         }
+
+        Log.d(TAG, "Parsed coords");
 
         return poly;
     }
