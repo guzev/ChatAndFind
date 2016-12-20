@@ -74,7 +74,6 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     ValueEventListener generalMarkerListener;
     private static boolean isLine = false;
     private Polyline line;
-    private static int id = 0;
     private Button changingButton;
 
     @Override
@@ -82,7 +81,6 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_google_maps);
-
         changingButton = (Button) findViewById(R.id.changing_button);
         chatId = getIntent().getStringExtra(Config.CHAT_ID_TAG);
         mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -129,11 +127,42 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("isLine", isLine);
+        outState.putDouble("lat", friendLat);
+        outState.putDouble("lon", friendLng);
+        if(isLine && line != null) {
+            line.remove();
+            getSupportLoaderManager().destroyLoader(0);
+        }
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle inState) {
+        Log.d(TAG, "onRestoreInstanceState");
+        super.onRestoreInstanceState(inState);
+        this.isLine = inState.getBoolean("isLine");
+        friendLat = inState.getDouble("lat");
+        friendLng = inState.getDouble("lon");
+        if(isLine) {
+            getSupportLoaderManager().initLoader(0, null, GoogleMapsActivity.this).forceLoad();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         for (Map.Entry<String, ValueEventListener> entry : listenersMap.entrySet()) {
             databaseReference.child(Config.USERS).child(entry.getKey()).removeEventListener(entry.getValue());
         }
         generalMarkerChatSettingsReference.removeEventListener(generalMarkerListener);
+        Log.d(TAG, "onDestroy");
+        if(isLine && line != null) {
+            line.remove();
+           getSupportLoaderManager().destroyLoader(0);
+        }
         super.onDestroy();
     }
 
@@ -186,11 +215,12 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                                 //LatLng myPos = myLocationMarker.getPosition();
                                 friendLat = latLng.latitude;
                                 friendLng = latLng.longitude;
-                                if(isLine) {
+                                if(isLine && line != null) {
                                     line.remove();
+                                    getSupportLoaderManager().destroyLoader(0);
                                 }
                                 //showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
-                                getSupportLoaderManager().initLoader(id++, null, GoogleMapsActivity.this).forceLoad();
+                                getSupportLoaderManager().initLoader(0, null, GoogleMapsActivity.this).forceLoad();
                             }
 
                         }
@@ -250,6 +280,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
 
     @Override
     public void onLoaderReset(Loader<List<List<HashMap<String, String>>>> loader) {
+
     }
 
     @Override
