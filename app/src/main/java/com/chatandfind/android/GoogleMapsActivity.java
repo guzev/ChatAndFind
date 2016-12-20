@@ -118,12 +118,21 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
             public void removeListeners() {
 
             }
+
+
         };
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        if(savedInstanceState != null) {
+            Log.d(TAG, "really it's worked");
+            isLine = savedInstanceState.getBoolean("isLine");
+            friendLat = savedInstanceState.getDouble("lat");
+            friendLng = savedInstanceState.getDouble("lon");
+        }
     }
 
     @Override
@@ -134,18 +143,11 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         outState.putDouble("lat", friendLat);
         outState.putDouble("lon", friendLng);
         if(isLine && line != null) {
+            line.remove();
             getSupportLoaderManager().destroyLoader(0);
         }
     }
 
-    @Override
-    protected void onRestoreInstanceState(Bundle inState) {
-        Log.d(TAG, "onRestoreInstanceState");
-        super.onRestoreInstanceState(inState);
-        this.isLine = inState.getBoolean("isLine");
-        friendLat = inState.getDouble("lat");
-        friendLng = inState.getDouble("lon");
-    }
 
     @Override
     protected void onDestroy() {
