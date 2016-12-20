@@ -35,6 +35,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -69,6 +70,9 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     private double friendLat, friendLng;
     private HashMap<String, ValueEventListener> listenersMap;
     ValueEventListener generalMarkerListener;
+    private static boolean isLine = false;
+    private Polyline line;
+    private static int id = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,8 +173,11 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                     //LatLng myPos = myLocationMarker.getPosition();
                     friendLat = latLng.latitude;
                     friendLng = latLng.longitude;
+                    if(isLine) {
+                        line.remove();
+                    }
                     //showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
-                    getSupportLoaderManager().initLoader(0, null, GoogleMapsActivity.this).forceLoad();
+                    getSupportLoaderManager().initLoader(id++, null, GoogleMapsActivity.this).forceLoad();
                 }
                 generalMarkerChatSettingsReference.child("longitude").setValue(latLng.longitude);
                 generalMarkerChatSettingsReference.child("latitude").setValue(latLng.latitude);
@@ -246,8 +253,10 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
 
         // Drawing polyline in the Google Map for the i-th route
         if (lineOptions != null) {
-            mMap.addPolyline(lineOptions);
+            line = mMap.addPolyline(lineOptions);
+            isLine = true;
         } else {
+            isLine = false;
             Log.d("showDirection", "without Polylines drawn");
         }
     }
