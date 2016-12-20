@@ -147,9 +147,6 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         this.isLine = inState.getBoolean("isLine");
         friendLat = inState.getDouble("lat");
         friendLng = inState.getDouble("lon");
-        if(isLine) {
-            getSupportLoaderManager().initLoader(0, null, GoogleMapsActivity.this).forceLoad();
-        }
     }
 
     @Override
@@ -270,6 +267,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         };
 
         generalMarkerChatSettingsReference.addValueEventListener(generalMarkerListener);
+
     }
 
     @Override
@@ -367,6 +365,9 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                                     if (myLocationMarker != null) {
                                         mMap.moveCamera(CameraUpdateFactory.zoomTo(10));
                                         mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationMarker.getPosition()));
+                                        if(isLine) {
+                                            getSupportLoaderManager().initLoader(0, null, GoogleMapsActivity.this).forceLoad();
+                                        }
                                     }
                                 }
                             } else {
@@ -387,6 +388,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
             public void onCancelled(DatabaseError databaseError) {
             }
         });
+
     }
 
     private Bitmap getCircularBitmap(Bitmap bitmap) {
