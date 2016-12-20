@@ -1,6 +1,5 @@
 package com.chatandfind.android;
 
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.model.LatLng;
 
 import android.Manifest;
@@ -48,7 +47,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
-import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,14 +58,17 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     private FirebaseUser mFirebaseUser;
     private DatabaseReference databaseReference;
     private DatabaseReference userReference;
-    private DatabaseReference chatSettingsReference;
+    private DatabaseReference usersChatSettingsReference;
+    private DatabaseReference generalMarkerChatSettingsReference;
     private ChildEventListener chatSettingsListener;
 
     private String chatId;
     private String encodedEmail;
     private Marker myLocationMarker;
+    private Marker generalMarker;
     private double friendLat, friendLng;
     private HashMap<String, ValueEventListener> listenersMap;
+    ValueEventListener generalMarkerListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +81,8 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         encodedEmail = Config.encodeForFirebaseKey(mFirebaseUser.getEmail());
         databaseReference = FirebaseDatabase.getInstance().getReference();
         userReference = databaseReference.child(Config.USERS).child(encodedEmail);
-        chatSettingsReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId).child("users");
+        usersChatSettingsReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId).child("users");
+        generalMarkerChatSettingsReference = databaseReference.child(Config.CHATS_SETTINGS).child(chatId).child("generalMarker");
         listenersMap = new HashMap<>();
         chatSettingsListener = new ChildEventListener() {
             @Override
@@ -104,7 +106,8 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+            }
 
             public void removeListeners() {
 
@@ -122,6 +125,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         for (Map.Entry<String, ValueEventListener> entry : listenersMap.entrySet()) {
             databaseReference.child(Config.USERS).child(entry.getKey()).removeEventListener(entry.getValue());
         }
+        generalMarkerChatSettingsReference.removeEventListener(generalMarkerListener);
         super.onDestroy();
     }
 
@@ -168,15 +172,38 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                     //showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
                     getSupportLoaderManager().initLoader(0, null, GoogleMapsActivity.this).forceLoad();
                 }
+                generalMarkerChatSettingsReference.child("longitude").setValue(latLng.longitude);
+                generalMarkerChatSettingsReference.child("latitude").setValue(latLng.latitude);
             }
         });
         addAllUsersMarkers();
+
+        generalMarkerListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChild("latitude") && dataSnapshot.hasChild("longitude")) {
+                    if (generalMarker == null) {
+                        generalMarker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng((double) dataSnapshot.child("latitude").getValue(), (double) dataSnapshot.child("longitude").getValue())));
+                    } else {
+                        generalMarker.setPosition(new LatLng((double) dataSnapshot.child("latitude").getValue(), (double) dataSnapshot.child("longitude").getValue()));
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
+        generalMarkerChatSettingsReference.addValueEventListener(generalMarkerListener);
     }
 
     @Override
     public Loader<List<List<HashMap<String, String>>>> onCreateLoader(int id, Bundle args) {
         LatLng myPos = myLocationMarker.getPosition();
-        return new DirectionsLoader( this, myPos.latitude, myPos.longitude, friendLat, friendLng);
+        return new DirectionsLoader(this, myPos.latitude, myPos.longitude, friendLat, friendLng);
     }
 
     @Override
@@ -184,7 +211,8 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     }
 
     @Override
-    public void onLoadFinished(Loader<List<List<HashMap<String, String>>>> loader, List<List<HashMap<String, String>>> result) {
+    public void onLoadFinished
+            (Loader<List<List<HashMap<String, String>>>> loader, List<List<HashMap<String, String>>> result) {
         ArrayList<LatLng> points;
         PolylineOptions lineOptions = null;
 
@@ -225,7 +253,8 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) throws SecurityException {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) throws SecurityException {
         if (requestCode == Config.MY_LOCATION_REQUEST_CODE) {
             if (permissions.length == 1 && permissions[0].equals(android.Manifest.permission.ACCESS_FINE_LOCATION) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 mMap.setMyLocationEnabled(true);
@@ -237,7 +266,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     }
 
     private void addAllUsersMarkers() {
-        chatSettingsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+        usersChatSettingsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.d(TAG, "addAllUsersMarkers : " + dataSnapshot.getChildrenCount() + " " + dataSnapshot.getKey());
