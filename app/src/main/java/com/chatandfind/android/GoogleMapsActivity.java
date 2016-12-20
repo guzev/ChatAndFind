@@ -134,10 +134,8 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         outState.putDouble("lat", friendLat);
         outState.putDouble("lon", friendLng);
         if(isLine && line != null) {
-            line.remove();
             getSupportLoaderManager().destroyLoader(0);
         }
-
     }
 
     @Override
@@ -216,7 +214,6 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
                                     line.remove();
                                     getSupportLoaderManager().destroyLoader(0);
                                 }
-                                //showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
                                 getSupportLoaderManager().initLoader(0, null, GoogleMapsActivity.this).forceLoad();
                             }
 
@@ -278,7 +275,6 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
 
     @Override
     public void onLoaderReset(Loader<List<List<HashMap<String, String>>>> loader) {
-
     }
 
     @Override
