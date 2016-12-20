@@ -19,6 +19,8 @@ import android.support.v4.content.ContextCompat;
 
 import android.support.v4.content.Loader;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -73,6 +75,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
     private static boolean isLine = false;
     private Polyline line;
     private static int id = 0;
+    private Button changingButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +83,7 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_google_maps);
 
+        changingButton = (Button) findViewById(R.id.changing_button);
         chatId = getIntent().getStringExtra(Config.CHAT_ID_TAG);
         mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         encodedEmail = Config.encodeForFirebaseKey(mFirebaseUser.getEmail());
@@ -164,25 +168,56 @@ public class GoogleMapsActivity extends FragmentActivity implements OnMapReadyCa
             }
         });
 
+        changingButton.setOnClickListener(new View.OnClickListener() {
+            int state = 0;
+
+            @Override
+            public void onClick(View view) {
+                if (state == 0) {
+                    changingButton.setText("Путь");
+                    state = 1;
+
+                    mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+                        @Override
+                        public void onMapLongClick(LatLng latLng) {
+                            Log.d(TAG, "setOnMapLongClickListener");
+                            if (myLocationMarker != null) {
+                                Log.d(TAG, "setOnMapLongClickListener");
+                                //LatLng myPos = myLocationMarker.getPosition();
+                                friendLat = latLng.latitude;
+                                friendLng = latLng.longitude;
+                                if(isLine) {
+                                    line.remove();
+                                }
+                                //showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
+                                getSupportLoaderManager().initLoader(id++, null, GoogleMapsActivity.this).forceLoad();
+                            }
+
+                        }
+                    });
+                } else {
+                    changingButton.setText("Маркер");
+                    state = 0;
+
+                    mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+                        @Override
+                        public void onMapLongClick(LatLng latLng) {
+                            generalMarkerChatSettingsReference.child("longitude").setValue(latLng.longitude);
+                            generalMarkerChatSettingsReference.child("latitude").setValue(latLng.latitude);
+                        }
+                    });
+                }
+            }
+        });
+
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
-                Log.d(TAG, "setOnMapLongClickListener");
-                if (myLocationMarker != null) {
-                    Log.d(TAG, "setOnMapLongClickListener");
-                    //LatLng myPos = myLocationMarker.getPosition();
-                    friendLat = latLng.latitude;
-                    friendLng = latLng.longitude;
-                    if(isLine) {
-                        line.remove();
-                    }
-                    //showDirection(GoogleMapsActivity.this, myPos.latitude, myPos.longitude, latLng.latitude, latLng.longitude);
-                    getSupportLoaderManager().initLoader(id++, null, GoogleMapsActivity.this).forceLoad();
-                }
                 generalMarkerChatSettingsReference.child("longitude").setValue(latLng.longitude);
                 generalMarkerChatSettingsReference.child("latitude").setValue(latLng.latitude);
             }
         });
+
         addAllUsersMarkers();
 
         generalMarkerListener = new ValueEventListener() {
